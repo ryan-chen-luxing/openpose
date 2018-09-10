@@ -598,14 +598,14 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
         {
             auto frameNumber = itrf->frameNumber;
             cv::Point3d translation{
-                itrf->translation.at<double>(0),
-                itrf->translation.at<double>(1),
-                itrf->translation.at<double>(2)
+                itrf->translation(0),
+                itrf->translation(1),
+                itrf->translation(2)
             };
             cv::Point3d rotation{
-                itrf->rotation.at<double>(0),
-                itrf->rotation.at<double>(1),
-                itrf->rotation.at<double>(2)
+                itrf->rotation(0),
+                itrf->rotation(1),
+                itrf->rotation(2)
             };
 
             if (itrf == person.headOrientationRawFrames.begin() ||
@@ -624,15 +624,15 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                 {
                     cv::Point3d lastTranslation
                     {
-                        lastFrame->translation.at<double>(0),
-                        lastFrame->translation.at<double>(1),
-                        lastFrame->translation.at<double>(2)
+                        lastFrame->translation(0),
+                        lastFrame->translation(1),
+                        lastFrame->translation(2)
                     };
                     cv::Point3d lastRotation
                     {
-                        lastFrame->rotation.at<double>(0),
-                        lastFrame->rotation.at<double>(1),
-                        lastFrame->rotation.at<double>(2)
+                        lastFrame->rotation(0),
+                        lastFrame->rotation(1),
+                        lastFrame->rotation(2)
                     };
 
                     person.headTranslationTracks.back().push_back(KeyFrame3D(lastFrame->frameNumber, lastTranslation));
@@ -651,15 +651,15 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
             {
                 cv::Point3d lastKeyTranslation
                 {
-                    lastKeyframe->translation.at<double>(0),
-                    lastKeyframe->translation.at<double>(1),
-                    lastKeyframe->translation.at<double>(2)
+                    lastKeyframe->translation(0),
+                    lastKeyframe->translation(1),
+                    lastKeyframe->translation(2)
                 };
                 cv::Point3d lastKeyRotation
                 {
-                    lastKeyframe->rotation.at<double>(0),
-                    lastKeyframe->rotation.at<double>(1),
-                    lastKeyframe->rotation.at<double>(2)
+                    lastKeyframe->rotation(0),
+                    lastKeyframe->rotation(1),
+                    lastKeyframe->rotation(2)
                 };
 
 
@@ -670,15 +670,15 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                 {
                     cv::Point3d tt
                     {
-                        i->translation.at<double>(0),
-                        i->translation.at<double>(1),
-                        i->translation.at<double>(2)
+                        i->translation(0),
+                        i->translation(1),
+                        i->translation(2)
                     };
                     cv::Point3d rr
                     {
-                        i->rotation.at<double>(0),
-                        i->rotation.at<double>(1),
-                        i->rotation.at<double>(2)
+                        i->rotation(0),
+                        i->rotation(1),
+                        i->rotation(2)
                     };
 
                     double t = double(i->frameNumber - lastKeyframe->frameNumber) / double(frameNumber - lastKeyframe->frameNumber);
@@ -699,9 +699,9 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                     {
                         cv::Point3d lastTranslation
                         {
-                            lastFrame->translation.at<double>(0),
-                            lastFrame->translation.at<double>(1),
-                            lastFrame->translation.at<double>(2)
+                            lastFrame->translation(0),
+                            lastFrame->translation(1),
+                            lastFrame->translation(2)
                         };
 
                         person.headTranslationTracks.back().push_back(KeyFrame3D(lastFrame->frameNumber, lastTranslation));
@@ -711,9 +711,9 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                     {
                         cv::Point3d lastRotation
                         {
-                            lastFrame->rotation.at<double>(0),
-                            lastFrame->rotation.at<double>(1),
-                            lastFrame->rotation.at<double>(2)
+                            lastFrame->rotation(0),
+                            lastFrame->rotation(1),
+                            lastFrame->rotation(2)
                         };
 
                         person.headRotationTracks.back().push_back(KeyFrame3D(lastFrame->frameNumber, lastRotation));

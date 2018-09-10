@@ -160,8 +160,8 @@ namespace op
         struct TransformRawFrame
         {
             int frameNumber;
-            cv::Mat translation;
-            cv::Mat rotation;
+            cv::Mat_<double> translation;
+            cv::Mat_<double> rotation;
 
             TransformRawFrame(int frameNumber_,
                 const cv::Mat& translation_,
