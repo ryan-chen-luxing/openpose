@@ -136,7 +136,7 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
             }
         }
 
-        personsBeingTracked.erase(std::remove_if(personsBeingTracked.begin(), personsBeingTracked.end(), [&](auto index)
+        personsBeingTracked.erase(std::remove_if(personsBeingTracked.begin(), personsBeingTracked.end(), [&](unsigned int index)
         {
             return std::find(personsMatched.begin(), personsMatched.end(), index) == personsMatched.end();
         }), personsBeingTracked.end());
