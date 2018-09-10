@@ -64,8 +64,8 @@ namespace op
 
         explicit VideoInfo(const json & j)
             : classificationInfo{ j["classificationInfo"] }
+            , framesPoseTracking{ j["framesPoseTracking"] }
         {
-            framesPoseTracking = j["framesPoseTracking"];
         }
     };
 
