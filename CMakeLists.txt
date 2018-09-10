@@ -100,7 +100,7 @@ set_property(CACHE DL_FRAMEWORK PROPERTY STRINGS CAFFE)
 # Suboptions for Caffe DL Framework
 include(CMakeDependentOption)
 if (${DL_FRAMEWORK} MATCHES "CAFFE")
-  CMAKE_DEPENDENT_OPTION(BUILD_CAFFE "Build Caffe as part of OpenPose." OFF
+  CMAKE_DEPENDENT_OPTION(BUILD_CAFFE "Build Caffe as part of OpenPose." ON
     "DL_FRAMEWORK" ON)
   # OpenPose flags
   add_definitions(-DUSE_CAFFE)
