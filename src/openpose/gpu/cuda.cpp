@@ -5,6 +5,8 @@
 #endif
 #include <openpose/gpu/cuda.hpp>
 
+#include <sstream>
+
 namespace op
 {
     #ifdef USE_CUDA
@@ -46,6 +48,25 @@ namespace op
                 int gpuNumber;
                 cudaGetDeviceCount(&gpuNumber);
                 cudaCheck(__LINE__, __FUNCTION__, __FILE__);
+
+                if (true)
+                {
+                    for (auto i = 0; i < gpuNumber; ++i)
+                    {
+                        cudaDeviceProp prop;
+                        cudaGetDeviceProperties(&prop, i);
+
+                        std::stringstream ss;
+
+                        ss << "cuda device " << i << ", name: " << prop.name \
+                            << ", totalGlobalMem: " << prop.totalGlobalMem \
+                            << ", major: " << prop.major \
+                            << ", minor: " << prop.minor << std::endl;
+
+                        log(ss.str(), Priority::High);
+                    }
+                }
+
                 return gpuNumber;
             #else
                 error("OpenPose must be compiled with the `USE_CUDA` macro definition in order to use this"

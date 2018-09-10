@@ -13,7 +13,7 @@ namespace op
                                          const std::vector<HeatMapType>& heatMapTypes_,
                                          const ScaleMode heatMapScale_, const bool addPartCandidates_,
                                          const float renderThreshold_, const int numberPeopleMax_,
-                                         const bool enableGoogleLogging_) :
+                                         const bool enableGoogleLogging_, const std::string& poseTrackingInfo_) :
         enable{enable_},
         netInputSize{netInputSize_},
         outputSize{outputSize_},
@@ -34,7 +34,8 @@ namespace op
         addPartCandidates{addPartCandidates_},
         renderThreshold{renderThreshold_},
         numberPeopleMax{numberPeopleMax_},
-        enableGoogleLogging{enableGoogleLogging_}
+        enableGoogleLogging{enableGoogleLogging_},
+        poseTrackingInfo{poseTrackingInfo_}
     {
     }
 }

@@ -1,6 +1,14 @@
 #include <openpose/pose/renderPose.hpp>
 #include <openpose/utilities/keypoint.hpp>
 #include <openpose/pose/poseCpuRenderer.hpp>
+#include <openpose/utilities/fastMath.hpp>
+#include <opencv2/opencv.hpp>
+#include <fstream>
+#include <string>
+#include <tuple>
+#include <nlohmann/json.hpp>
+
+using namespace nlohmann;
 
 namespace op
 {
@@ -15,6 +23,7 @@ namespace op
 
     std::pair<int, std::string> PoseCpuRenderer::renderPose(Array<float>& outputData,
                                                             const Array<float>& poseKeypoints,
+                                                            const unsigned long long frameNumber,
                                                             const float scaleInputToOutput,
                                                             const float scaleNetToOutput)
     {
@@ -34,7 +43,7 @@ namespace op
                 scaleKeypoints(poseKeypointsRescaled, scaleInputToOutput);
                 // Render keypoints
                 renderPoseKeypointsCpu(outputData, poseKeypointsRescaled, mPoseModel, mRenderThreshold,
-                                       mBlendOriginalFrame);
+                    frameNumber, mBlendOriginalFrame);
             }
             // Draw heat maps / PAFs
             else

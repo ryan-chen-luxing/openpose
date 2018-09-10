@@ -151,7 +151,8 @@ namespace op
                                               const bool flirCamera, const std::string& cameraResolution,
                                               const double webcamFps, const std::string& cameraParameterPath,
                                               const bool undistortImage, const unsigned int imageDirectoryStereo,
-                                              const int flirCameraIndex)
+                                              const int flirCameraIndex,
+                                              const std::string& videoInfoJsonPath, bool poseTrackingInfo)
     {
         try
         {
@@ -162,7 +163,7 @@ namespace op
                 return std::make_shared<ImageDirectoryReader>(imageDirectory, imageDirectoryStereo,
                                                               cameraParameterPath);
             else if (type == ProducerType::Video)
-                return std::make_shared<VideoReader>(videoPath, imageDirectoryStereo, cameraParameterPath);
+                return std::make_shared<VideoReader>(videoPath, imageDirectoryStereo, cameraParameterPath, videoInfoJsonPath, poseTrackingInfo);
             else if (type == ProducerType::IPCamera)
                 return std::make_shared<IpCameraReader>(ipCameraPath);
             // Flir camera

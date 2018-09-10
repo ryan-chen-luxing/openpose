@@ -1,13 +1,18 @@
 #include <openpose/utilities/fileSystem.hpp>
 #include <openpose/producer/videoReader.hpp>
+#include <openpose/pose/poseParametersRender.hpp>
+#include <openpose/utilities/fastMath.hpp>
+#include <fstream>
+#include <math.h>
 
 namespace op
 {
     VideoReader::VideoReader(const std::string & videoPath, const unsigned int imageDirectoryStereo,
-                             const std::string& cameraParameterPath) :
+                             const std::string& cameraParameterPath, const std::string& videoInfoJsonPath, bool poseTrackingInfo) :
         VideoCaptureReader{videoPath, ProducerType::Video},
         mImageDirectoryStereo{imageDirectoryStereo},
-        mPathName{getFileNameNoExtension(videoPath)}
+        mPathName{getFileNameNoExtension(videoPath)},
+        mIndexFramePoseTracking{0}
     {
         try
         {
@@ -31,6 +36,36 @@ namespace op
                 mCameraParameterReader.readParameters(cameraParameterPath, serialNumbers);
                 // Set video size
                 set(CV_CAP_PROP_FRAME_WIDTH, get(CV_CAP_PROP_FRAME_WIDTH)/mImageDirectoryStereo);
+            }
+
+            if (!videoInfoJsonPath.empty())
+            {
+                std::ifstream i(videoInfoJsonPath);
+                json j;
+                i >> j;
+                mVideoInfo = std::make_shared<VideoInfo>(j);
+            }
+        }
+        catch (const std::exception& e)
+        {
+            error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+        }
+    }
+
+    void VideoReader::checkFrame()
+    {
+        try
+        {
+            if (mVideoInfo && mIndexFramePoseTracking < mVideoInfo->framesPoseTracking.size())
+            {
+                auto currentFrame = get(CV_CAP_PROP_POS_FRAMES);
+
+                auto validFrame = mVideoInfo->framesPoseTracking[mIndexFramePoseTracking];
+
+                if (validFrame != currentFrame)
+                {
+                    set(CV_CAP_PROP_POS_FRAMES, validFrame);
+                }
             }
         }
         catch (const std::exception& e)
@@ -82,6 +117,7 @@ namespace op
     {
         try
         {
+            checkFrame();
             return mPathName + "_" + VideoCaptureReader::getNextFrameName();
         }
         catch (const std::exception& e)
@@ -126,6 +162,9 @@ namespace op
     {
         try
         {
+            checkFrame();
+            ++mIndexFramePoseTracking;
+            auto currentFrame = intRound(this->get(CV_CAP_PROP_POS_FRAMES));
             return VideoCaptureReader::getRawFrame();
         }
         catch (const std::exception& e)

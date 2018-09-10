@@ -446,7 +446,8 @@ namespace op
             // Required parameters
             const auto renderOutput = wrapperStructPose.renderMode != RenderMode::None
                                         || wrapperStructFace.renderMode != RenderMode::None
-                                        || wrapperStructHand.renderMode != RenderMode::None;
+                                        || wrapperStructHand.renderMode != RenderMode::None
+                                        || !wrapperStructPose.poseTrackingInfo.empty();
             const auto renderOutputGpu = wrapperStructPose.renderMode == RenderMode::Gpu
                                             || wrapperStructFace.renderMode == RenderMode::Gpu
                                             || wrapperStructHand.renderMode == RenderMode::Gpu;
@@ -546,7 +547,7 @@ namespace op
             std::vector<std::shared_ptr<FaceExtractorNet>> faceExtractorNets;
             std::vector<std::shared_ptr<HandExtractorNet>> handExtractorNets;
             std::vector<std::shared_ptr<PoseGpuRenderer>> poseGpuRenderers;
-            std::shared_ptr<PoseCpuRenderer> poseCpuRenderer;
+            std::vector<std::shared_ptr<Renderer>> poseCpuRenderers;
             if (numberThreads > 0)
             {
                 // Get input scales and sizes
@@ -603,10 +604,11 @@ namespace op
                         // CPU rendering
                         if (wrapperStructPose.renderMode == RenderMode::Cpu)
                         {
-                            poseCpuRenderer = std::make_shared<PoseCpuRenderer>(
+                            auto poseCpuRenderer = std::make_shared<PoseCpuRenderer>(
                                 wrapperStructPose.poseModel, wrapperStructPose.renderThreshold,
                                 wrapperStructPose.blendOriginalFrame, alphaKeypoint, alphaHeatMap,
                                 wrapperStructPose.defaultPartToRender);
+                            poseCpuRenderers.emplace_back(poseCpuRenderer);
                             cpuRenderers.emplace_back(std::make_shared<WPoseRenderer<TDatumsSP>>(poseCpuRenderer));
                         }
                     }
@@ -657,6 +659,13 @@ namespace op
                     // }
                 }
 
+                if (!wrapperStructPose.poseTrackingInfo.empty())
+                {
+                    auto visualizer = std::make_shared<PoseTrackingInfoVisualizer>(
+                        wrapperStructPose.poseModel, wrapperStructPose.poseTrackingInfo);
+                    poseCpuRenderers.emplace_back(visualizer);
+                    cpuRenderers.emplace_back(std::make_shared<WPoseRenderer<TDatumsSP>>(visualizer));
+                }
 
                 // Face extractor(s)
                 if (wrapperStructFace.enable)
@@ -918,8 +927,9 @@ namespace op
             // enabled, etc.)
             if (!writeJsonCleaned.empty())
             {
-                const auto peopleJsonSaver = std::make_shared<PeopleJsonSaver>(writeJsonCleaned);
-                mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
+                //const auto peopleJsonSaver = std::make_shared<PeopleJsonSaver>(writeJsonCleaned);
+                //mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
+                mOutputWs.emplace_back(std::make_shared<WJsonOutput<TDatumsSP>>(wrapperStructOutput.videoReader, wrapperStructOutput.writeJson));
             }
             // Write people pose data on disk (COCO validation json format)
             if (!wrapperStructOutput.writeCocoJson.empty())
@@ -1001,7 +1011,10 @@ namespace op
                 // PoseRenderers to Renderers
                 std::vector<std::shared_ptr<Renderer>> renderers;
                 if (wrapperStructPose.renderMode == RenderMode::Cpu)
-                    renderers.emplace_back(std::static_pointer_cast<Renderer>(poseCpuRenderer));
+                    for (auto poseCpuRenderer : poseCpuRenderers)
+                    {
+                        renderers.emplace_back(std::static_pointer_cast<Renderer>(poseCpuRenderer));
+                    }
                 else
                     for (const auto& poseGpuRenderer : poseGpuRenderers)
                         renderers.emplace_back(std::static_pointer_cast<Renderer>(poseGpuRenderer));

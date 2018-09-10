@@ -28,6 +28,7 @@
 #endif
 // OpenPose dependencies
 #include <openpose/headers.hpp>
+#include <memory>
 
 // See all the available parameter options withe the `--help` flag. E.g. `build/examples/openpose/openpose.bin --help`
 // Note: This command will show you flags for other unnecessary 3rdparty files. Check only the flags for the OpenPose
@@ -52,6 +53,8 @@ DEFINE_double(camera_fps,               30.0,           "Frame rate for the webc
                                                         " value between the OpenPose displayed speed and the webcam real frame rate.");
 DEFINE_string(video,                    "",             "Use a video file instead of the camera. Use `examples/media/video.avi` for our default"
                                                         " example video.");
+//DEFINE_string(videoInfo,                "",             "json configuration file for the video");
+
 DEFINE_string(image_dir,                "",             "Process a directory of images. Use `examples/media/` for our default example folder with 20"
                                                         " images. Read all standard formats (jpg, png, bmp, etc.).");
 DEFINE_bool(flir_camera,                false,          "Whether to use FLIR (Point-Grey) stereo camera.");
@@ -238,6 +241,9 @@ DEFINE_string(write_bvh,                "",             "Experimental, not avail
 DEFINE_string(udp_host,                 "",             "Experimental, not available yet. IP for UDP communication. E.g., `192.168.0.1`.");
 DEFINE_string(udp_port,                 "8051",         "Experimental, not available yet. Port number for UDP communication.");
 
+DEFINE_string(youtubeId, "", "video id for youtube");
+DEFINE_bool(visualizeKeyframes, false, "false to generate keyframes, true to visualize keyframes.");
+
 int openPoseDemo()
 {
     try
@@ -256,6 +262,7 @@ int openPoseDemo()
         // // Print out speed values faster
         // op::Profiler::setDefaultX(100);
 
+
         // Applying user defined configuration - Google flags to program variables
         // outputSize
         const auto outputSize = op::flagsToPoint(FLAGS_output_resolution, "-1x-1");
@@ -265,11 +272,32 @@ int openPoseDemo()
         const auto faceNetInputSize = op::flagsToPoint(FLAGS_face_net_resolution, "368x368 (multiples of 16)");
         // handNetInputSize
         const auto handNetInputSize = op::flagsToPoint(FLAGS_hand_net_resolution, "368x368 (multiples of 16)");
+        
+        std::string youtubeId = FLAGS_youtubeId;
+        youtubeId = "b9OlwQEnncs";
+        bool visualizeKeyframes = FLAGS_visualizeKeyframes || false;
+        auto useCamera = youtubeId.empty();
+        auto visualizeCompressedPoseTracking = !useCamera && visualizeKeyframes;
+        auto inputObjectDetection = !visualizeCompressedPoseTracking && false;
+        auto outputPoseTracking = !visualizeCompressedPoseTracking;
         // producerType
-        const auto producerSharedPtr = op::flagsToProducer(FLAGS_image_dir, FLAGS_video, FLAGS_ip_camera, FLAGS_camera,
-                                                           FLAGS_flir_camera, FLAGS_camera_resolution, FLAGS_camera_fps,
-                                                           FLAGS_camera_parameter_folder, !FLAGS_frame_keep_distortion,
-                                                           (unsigned int) FLAGS_3d_views, FLAGS_flir_camera_index);
+        std::shared_ptr<op::Producer> producerSharedPtr;
+        if (useCamera)
+        {
+            producerSharedPtr = op::flagsToProducer(FLAGS_image_dir, FLAGS_video, FLAGS_ip_camera, FLAGS_camera,
+                FLAGS_flir_camera, FLAGS_camera_resolution, FLAGS_camera_fps,
+                FLAGS_camera_parameter_folder, !FLAGS_frame_keep_distortion,
+                (unsigned int)FLAGS_3d_views, FLAGS_flir_camera_index);
+        }
+        else
+        {
+            producerSharedPtr = op::flagsToProducer(FLAGS_image_dir, youtubeId + ".mp4", FLAGS_ip_camera, FLAGS_camera,
+                FLAGS_flir_camera, FLAGS_camera_resolution, FLAGS_camera_fps,
+                FLAGS_camera_parameter_folder, !FLAGS_frame_keep_distortion,
+                (unsigned int)FLAGS_3d_views, FLAGS_flir_camera_index,
+                inputObjectDetection ? youtubeId + "_objectDetection.json" : "");
+        }
+
         // poseModel
         const auto poseModel = op::flagsToPoseModel(FLAGS_model_pose);
         // JSON saving
@@ -295,11 +323,13 @@ int openPoseDemo()
         // Pose configuration (use WrapperStructPose{} for default and recommended configuration)
         const op::WrapperStructPose wrapperStructPose{
             !FLAGS_body_disable, netInputSize, outputSize, keypointScale, FLAGS_num_gpu, FLAGS_num_gpu_start,
-            FLAGS_scale_number, (float)FLAGS_scale_gap, op::flagsToRenderMode(FLAGS_render_pose, multipleView),
+            FLAGS_scale_number, (float)FLAGS_scale_gap,
+            visualizeCompressedPoseTracking ? op::RenderMode::None : op::flagsToRenderMode(FLAGS_render_pose, multipleView),
             poseModel, !FLAGS_disable_blending, (float)FLAGS_alpha_pose, (float)FLAGS_alpha_heatmap,
             FLAGS_part_to_show, FLAGS_model_folder, heatMapTypes, heatMapScale, FLAGS_part_candidates,
-            (float)FLAGS_render_threshold, FLAGS_number_people_max, enableGoogleLogging};
-        // Face configuration (use op::WrapperStructFace{} to disable it)
+            (float)FLAGS_render_threshold, FLAGS_number_people_max, enableGoogleLogging,
+            visualizeCompressedPoseTracking ? youtubeId : ""};
+        // Face configuration (use op::WrapperStructFace{} to disable it) 
         const op::WrapperStructFace wrapperStructFace{
             FLAGS_face, faceNetInputSize, op::flagsToRenderMode(FLAGS_face_render, multipleView, FLAGS_render_pose),
             (float)FLAGS_face_alpha_pose, (float)FLAGS_face_alpha_heatmap, (float)FLAGS_face_render_threshold};
@@ -312,19 +342,36 @@ int openPoseDemo()
         const op::WrapperStructExtra wrapperStructExtra{
             FLAGS_3d, FLAGS_3d_min_views, FLAGS_identification, FLAGS_tracking, FLAGS_ik_threads};
         // Producer (use default to disable any input)
+
         const op::WrapperStructInput wrapperStructInput{
             producerSharedPtr, FLAGS_frame_first, FLAGS_frame_last, FLAGS_process_real_time, FLAGS_frame_flip, 
             FLAGS_frame_rotate, FLAGS_frames_repeat};
         // Consumer (comment or use default argument to disable any output)
-        const op::WrapperStructOutput wrapperStructOutput{
-            op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
-            FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), FLAGS_write_json,
-            FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
-            FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
-            FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port};
+
+        std::shared_ptr<op::WrapperStructOutput> wrapperStructOutput;
+        if (useCamera)
+        {
+            wrapperStructOutput = std::make_shared<op::WrapperStructOutput>(
+                op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
+                FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), nullptr, FLAGS_write_json,
+                FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
+                FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
+                FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port);
+        }
+        else
+        {
+            auto videoReader = std::dynamic_pointer_cast<op::VideoReader>(producerSharedPtr);
+            wrapperStructOutput = std::make_shared<op::WrapperStructOutput>(
+                op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
+                FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), videoReader, outputPoseTracking ? youtubeId : "",
+                FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
+                FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
+                FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port);
+        }
+
         // Configure wrapper
         opWrapper.configure(wrapperStructPose, wrapperStructFace, wrapperStructHand, wrapperStructExtra,
-                            wrapperStructInput, wrapperStructOutput);
+                            wrapperStructInput, *wrapperStructOutput);
         // Set to single-thread running (to debug and/or reduce latency)
         if (FLAGS_disable_multi_thread)
             opWrapper.disableMultiThreading();

@@ -11,6 +11,7 @@ set(SOURCES_OP_POSE
     poseParameters.cpp
     poseParametersRender.cpp
     poseRenderer.cpp
+    poseTrackingInfoVisualizer.cpp
     renderPose.cpp
     renderPose.cu)
 

@@ -4,6 +4,7 @@
 #include <openpose/core/common.hpp>
 #include <openpose/filestream/enumClasses.hpp>
 #include <openpose/gui/enumClasses.hpp>
+#include <openpose/producer/videoReader.hpp>
 
 namespace op
 {
@@ -49,6 +50,8 @@ namespace op
          * JSON option only available for OpenCV >= 3.0.
          */
         DataFormat writeKeypointFormat;
+
+        std::shared_ptr<op::VideoReader> videoReader;
 
         /**
          * Directory to write OpenPose output in JSON format.
@@ -142,6 +145,7 @@ namespace op
         WrapperStructOutput(const DisplayMode displayMode = DisplayMode::NoDisplay, const bool guiVerbose = false,
                             const bool fullScreen = false, const std::string& writeKeypoint = "",
                             const DataFormat writeKeypointFormat = DataFormat::Xml,
+                            const std::shared_ptr<op::VideoReader> videoReader = nullptr,
                             const std::string& writeJson = "", const std::string& writeCocoJson = "",
                             const std::string& writeCocoFootJson = "", const std::string& writeImages = "",
                             const std::string& writeImagesFormat = "", const std::string& writeVideo = "",

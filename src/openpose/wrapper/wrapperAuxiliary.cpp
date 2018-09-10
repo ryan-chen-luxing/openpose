@@ -110,8 +110,8 @@ namespace op
                       __LINE__, __FUNCTION__, __FILE__);
             if (!wrapperStructPose.enable)
             {
-                if (!wrapperStructFace.enable)
-                    error("Body keypoint detection must be enabled.", __LINE__, __FUNCTION__, __FILE__);
+                //if (!wrapperStructFace.enable)
+                //    error("Body keypoint detection must be enabled.", __LINE__, __FUNCTION__, __FILE__);
                 if (wrapperStructHand.enable)
                     error("Body keypoint detection must be enabled in order to run hand keypoint detection.",
                           __LINE__, __FUNCTION__, __FILE__);

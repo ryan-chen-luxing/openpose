@@ -89,6 +89,11 @@ namespace op
          */
         virtual bool isOpened() const = 0;
 
+        virtual bool shouldRelease()
+        {
+            return false;
+        }
+
         /**
          * This function releases and closes the Producer. After it is called, no more frames
          * can be retrieved from Producer::getFrames.

@@ -80,6 +80,12 @@ namespace op
             {
                 spProducer->release();
             }
+
+            if (spProducer->shouldRelease())
+            {
+                spProducer->release();
+            }
+
             // If producer released -> it sends an empty cv::Mat + a datumProducerRunning signal
             const bool datumProducerRunning = spProducer->isOpened();
             // If device is open

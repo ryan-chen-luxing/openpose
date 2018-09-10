@@ -1,10 +1,11 @@
 #include <openpose/wrapper/wrapperStructOutput.hpp>
+#include <openpose/producer/videoReader.hpp>
 
 namespace op
 {
     WrapperStructOutput::WrapperStructOutput(const DisplayMode displayMode_, const bool guiVerbose_,
                                              const bool fullScreen_, const std::string& writeKeypoint_,
-                                             const DataFormat writeKeypointFormat_, const std::string& writeJson_,
+                                             const DataFormat writeKeypointFormat_, const std::shared_ptr<VideoReader> videoReader_, const std::string& writeJson_,
                                              const std::string& writeCocoJson_, const std::string& writeCocoFootJson_,
                                              const std::string& writeImages_, const std::string& writeImagesFormat_,
                                              const std::string& writeVideo_, const double writeVideoFps_,
@@ -17,6 +18,7 @@ namespace op
         fullScreen{fullScreen_},
         writeKeypoint{writeKeypoint_},
         writeKeypointFormat{writeKeypointFormat_},
+        videoReader{videoReader_},
         writeJson{writeJson_},
         writeCocoJson{writeCocoJson_},
         writeCocoFootJson{writeCocoFootJson_},

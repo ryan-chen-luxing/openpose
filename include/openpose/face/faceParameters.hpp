@@ -28,6 +28,22 @@ namespace op
     // Rendering parameters
     const auto FACE_DEFAULT_ALPHA_KEYPOINT = POSE_DEFAULT_ALPHA_KEYPOINT;
     const auto FACE_DEFAULT_ALPHA_HEAT_MAP = POSE_DEFAULT_ALPHA_HEAT_MAP;
+
+    const std::vector<unsigned int> FACE_KEYPOINTS_LEFT_SIDE{
+        0,  1,  2,  3,  4,  5,  6,  7, 17, 18, 19, 20, 21, 36, 37, 38, 39, 40, 41, 31, 32, 48, 49, 50, 58, 59, 60, 61, 67, 68
+    };
+
+    const std::vector<unsigned int> FACE_KEYPOINTS_RIGHT_SIDE{
+        9, 10, 11, 12, 13, 14, 15, 16, 22, 23, 24, 25, 26, 52, 53, 54, 55, 56, 63, 64, 65, 34, 35, 42, 43, 44, 45, 46, 47, 69
+    };
+
+    const std::vector<unsigned int> FACE_KEYPOINTS_UP_SIDE{
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26,  0,  1,  2, 14, 15, 16, 36, 37, 38, 39, 40, 41, 68, 42, 43, 44, 45, 46, 47, 69, 27, 28, 29, 30
+    };
+
+    const std::vector<unsigned int> FACE_KEYPOINTS_BOTTOM_SIDE{
+         3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 31, 32, 33, 34, 35
+    };
 }
 
 #endif // OPENPOSE_FACE_FACE_PARAMETERS_HPP

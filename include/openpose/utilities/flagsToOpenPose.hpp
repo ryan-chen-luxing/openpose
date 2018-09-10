@@ -28,7 +28,8 @@ namespace op
                                                      const std::string& cameraParameterPath = "models/cameraParameters/",
                                                      const bool undistortImage = true,
                                                      const unsigned int imageDirectoryStereo = 1,
-                                                     const int flirCameraIndex = -1);
+                                                     const int flirCameraIndex = -1,
+                                                     const std::string& videoConfigurationPath = "", bool poseTrackingInfo = false);
 
     OP_API std::vector<HeatMapType> flagsToHeatMaps(const bool heatMapsAddParts = false,
                                                     const bool heatMapsAddBkg = false,
