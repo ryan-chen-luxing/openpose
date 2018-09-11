@@ -180,7 +180,7 @@ namespace op
     private:
         DELETE_COPY(PoseTrackingInfoVisualizer);
 
-        void renderPoseTrackingInfo(Array<float>& outputData, const unsigned long long frameNumber);
+        void renderPoseTrackingInfo(Array<float>& outputData, const std::size_t frameNumber);
 
         template <typename T1, typename T2>
         T1 lerp(const T1& p1, const T1& p2, T2 frameNumber1, T2 frameNumber2, T2 frameNumberCurrent)

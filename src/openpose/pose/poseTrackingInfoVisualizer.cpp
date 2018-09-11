@@ -96,7 +96,7 @@ namespace op
         }
     }
 
-    void PoseTrackingInfoVisualizer::renderPoseTrackingInfo(Array<float>& outputData, const unsigned long long frameNumber)
+    void PoseTrackingInfoVisualizer::renderPoseTrackingInfo(Array<float>& outputData, const std::size_t frameNumber)
     {
         if (mPoseTrackingInfo)
         {
