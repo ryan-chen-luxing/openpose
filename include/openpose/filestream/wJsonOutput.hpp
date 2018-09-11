@@ -79,6 +79,138 @@ namespace op
         }
 
     private:
+
+        std::shared_ptr<op::VideoReader> mVideoReader;
+        std::string mJsonPath;
+
+        struct FrameInfo
+        {
+            int frameNumber;
+            std::vector<Array<float>> keypoints;
+
+            FrameInfo(int frameNumber_, std::vector<Array<float>>& keypoints_)
+                : frameNumber{ frameNumber_ }
+                , keypoints{ keypoints_ }
+            {}
+        };
+
+        struct KeyFrame
+        {
+            int frameNumber;
+            float x;
+            float y;
+
+            KeyFrame(int frameNumber_, float x_, float y_)
+                : frameNumber{ frameNumber_ }
+                , x{ x_ }
+                , y{ y_ }
+            {}
+        };
+
+        struct TransformRawFrame
+        {
+            int frameNumber;
+            cv::Mat_<double> translation;
+            cv::Mat_<double> rotation;
+
+            TransformRawFrame(int frameNumber_,
+                const cv::Mat& translation_,
+                const cv::Mat& rotation_)
+                : frameNumber{ frameNumber_ }
+                , translation{ translation_ }
+                , rotation{ rotation_ }
+            {}
+        };
+
+        struct KeyFrame3D
+        {
+            int frameNumber;
+            cv::Point3d value;
+
+            KeyFrame3D(int frameNumber_,
+                const cv::Point3d& value_)
+                : frameNumber{ frameNumber_ }
+                , value{ value_ }
+            {}
+        };
+
+        struct FrameRaw
+        {
+            float confidence;
+            float x;
+            float y;
+
+            FrameRaw(float confidence_, float x_, float y_)
+                : confidence{ confidence_ }
+                , x{ x_ }
+                , y{ y_ }
+            {}
+        };
+
+        struct PersonInfo
+        {
+            int startFrameNumber;
+            int endFrameNumber;
+            int numKeyFrames;
+
+            PersonInfo()
+                : startFrameNumber{ 0 }
+                , endFrameNumber{ 0 }
+                , numKeyFrames{ 0 }
+            {
+            }
+
+            // frame number to raw frames
+            std::map<int, std::vector<std::vector<FrameRaw>>> frames;
+
+            // pose type to key frames
+            std::map<int, std::vector<std::vector<std::vector<KeyFrame>>>> keypointTracks;
+
+            std::vector<TransformRawFrame> headOrientationRawFrames;
+
+            std::vector<std::vector<KeyFrame3D>> headRotationTracks;
+            std::vector<std::vector<KeyFrame3D>> headTranslationTracks;
+        };
+
+        std::vector<FrameInfo> mRawFrames;
+
+        double mVideoWidth;
+        double mVideoHeight;
+        double mVideoFPS;
+        double mVideoNumFrames;
+
+        DELETE_COPY(WJsonOutput);
+
+        template<typename T>
+        inline float squareLengthPoint3(const T& p)
+        {
+            return p.x*p.x + p.y*p.y + p.z*p.z;
+        }
+
+        template<typename T>
+        inline float lengthPoint3(const T& p)
+        {
+            return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        }
+
+        template<typename T>
+        inline float squareLengthPoint2(const T& p)
+        {
+            return p.x*p.x + p.y*p.y;
+        }
+
+        template<typename T>
+        inline float lengthPoint2(const T& p)
+        {
+            return sqrt(p.x*p.x + p.y*p.y);
+        }
+
+        inline cv::Point2f normalizePoint2(const cv::Point2f& p)
+        {
+            auto length = lengthPoint2(p);
+            return cv::Point2f(p.x / length, p.y / length);
+        }
+
         //void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 4.f,
         //    double mseHeadTranslationThreshold = 0.35, double mseHeadRotationThreshold = 0.03,
         //    int indexerInterval = 200);
@@ -998,137 +1130,6 @@ namespace op
                 std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
                 system(command.c_str());
             }
-        }
-
-        std::shared_ptr<op::VideoReader> mVideoReader;
-        std::string mJsonPath;
-
-        struct FrameInfo
-        {
-            int frameNumber;
-            std::vector<Array<float>> keypoints;
-
-            FrameInfo(int frameNumber_, std::vector<Array<float>>& keypoints_)
-                : frameNumber{ frameNumber_ }
-                , keypoints{ keypoints_ }
-            {}
-        };
-
-        struct KeyFrame
-        {
-            int frameNumber;
-            float x;
-            float y;
-
-            KeyFrame(int frameNumber_, float x_, float y_)
-                : frameNumber{ frameNumber_ }
-                , x{ x_ }
-                , y{ y_ }
-            {}
-        };
-
-        struct TransformRawFrame
-        {
-            int frameNumber;
-            cv::Mat_<double> translation;
-            cv::Mat_<double> rotation;
-
-            TransformRawFrame(int frameNumber_,
-                const cv::Mat& translation_,
-                const cv::Mat& rotation_)
-                : frameNumber{ frameNumber_ }
-                , translation{ translation_ }
-                , rotation{ rotation_ }
-            {}
-        };
-
-        struct KeyFrame3D
-        {
-            int frameNumber;
-            cv::Point3d value;
-
-            KeyFrame3D(int frameNumber_,
-                const cv::Point3d& value_)
-                : frameNumber{ frameNumber_ }
-                , value{ value_ }
-            {}
-        };
-
-        struct FrameRaw
-        {
-            float confidence;
-            float x;
-            float y;
-
-            FrameRaw(float confidence_, float x_, float y_)
-                : confidence{ confidence_ }
-                , x{ x_ }
-                , y{ y_ }
-            {}
-        };
-
-        struct PersonInfo
-        {
-            int startFrameNumber;
-            int endFrameNumber;
-            int numKeyFrames;
-
-            PersonInfo()
-                : startFrameNumber{ 0 }
-                , endFrameNumber{ 0 }
-                , numKeyFrames{ 0 }
-            {
-            }
-
-            // frame number to raw frames
-            std::map<int, std::vector<std::vector<FrameRaw>>> frames;
-
-            // pose type to key frames
-            std::map<int, std::vector<std::vector<std::vector<KeyFrame>>>> keypointTracks;
-
-            std::vector<TransformRawFrame> headOrientationRawFrames;
-
-            std::vector<std::vector<KeyFrame3D>> headRotationTracks;
-            std::vector<std::vector<KeyFrame3D>> headTranslationTracks;
-        };
-
-        std::vector<FrameInfo> mRawFrames;
-
-        double mVideoWidth;
-        double mVideoHeight;
-        double mVideoFPS;
-        double mVideoNumFrames;
-
-        DELETE_COPY(WJsonOutput);
-
-        template<typename T>
-        inline float squareLengthPoint3(const T& p)
-        {
-            return p.x*p.x + p.y*p.y + p.z*p.z;
-        }
-
-        template<typename T>
-        inline float lengthPoint3(const T& p)
-        {
-            return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
-        }
-
-        template<typename T>
-        inline float squareLengthPoint2(const T& p)
-        {
-            return p.x*p.x + p.y*p.y;
-        }
-
-        template<typename T>
-        inline float lengthPoint2(const T& p)
-        {
-            return sqrt(p.x*p.x + p.y*p.y);
-        }
-
-        inline cv::Point2f normalizePoint2(const cv::Point2f& p)
-        {
-            auto length = lengthPoint2(p);
-            return cv::Point2f(p.x / length, p.y / length);
         }
     };
 }
