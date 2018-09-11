@@ -20,7 +20,7 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
 {
     // processing raw frames into skeletons
     std::vector<PersonInfo> personsRaw;
-    std::vector<unsigned int> personsBeingTracked;
+    std::vector<std::size_t> personsBeingTracked;
     for (const auto& rawframe : this->mRawFrames)
     {
         auto numberPeople = 0;
@@ -39,8 +39,8 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
             }
         }
 
-        std::vector<unsigned int> personsMatched;
-        std::vector<unsigned int> newPersonsIdentified;
+        std::vector<std::size_t> personsMatched;
+        std::vector<std::size_t> newPersonsIdentified;
         for (auto personIndex = 0; personIndex < numberPeople; personIndex++)
         {
             const auto personRectangle = getKeypointsRectangle(rawframe.keypoints[0], personIndex, confidenceThreshold);
@@ -76,7 +76,7 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                 {
                     // try to match a skeleton being tracked
                     auto minDifference = std::numeric_limits<float>::max();
-                    unsigned int personBestMatched = -1;
+                    std::size_t personBestMatched = std::numeric_limits<std::size_t>::max();
                     for (auto i : personsBeingTracked)
                     {
                         // check if the person has been matched already in the personsMatched array.
@@ -144,7 +144,7 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
             }
         }
 
-        personsBeingTracked.erase(std::remove_if(personsBeingTracked.begin(), personsBeingTracked.end(), [&](unsigned int index)
+        personsBeingTracked.erase(std::remove_if(personsBeingTracked.begin(), personsBeingTracked.end(), [&](std::size_t index)
         {
             return std::find(personsMatched.begin(), personsMatched.end(), index) == personsMatched.end();
         }), personsBeingTracked.end());
@@ -205,16 +205,16 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                     };
 
                     // search for best matched person
-                    auto areaOverlappingPercentageBest = 0.6f;
+                    float areaOverlappingPercentageBest = 0.6f;
                     auto personBestMatched = (*classificationItr)->objectsInfo.end();
 
                     for (auto objectInfoItr = (*classificationItr)->objectsInfo.begin();
                         objectInfoItr != (*classificationItr)->objectsInfo.end(); ++objectInfoItr)
                     {
-                        const auto x1 = (*objectInfoItr)->x1 * this->mVideoWidth;
-                        const auto y1 = (*objectInfoItr)->y1 * this->mVideoHeight;
-                        const auto x2 = (*objectInfoItr)->x2 * this->mVideoWidth;
-                        const auto y2 = (*objectInfoItr)->y2 * this->mVideoHeight;
+                        const float x1{ float((*objectInfoItr)->x1 * this->mVideoWidth) };
+                        const float y1{ float((*objectInfoItr)->y1 * this->mVideoHeight) };
+                        const float x2{ float((*objectInfoItr)->x2 * this->mVideoWidth) };
+                        const float y2{ float((*objectInfoItr)->y2 * this->mVideoHeight) };
 
                         const std::tuple<float, float, float, float> identityRect{ x1, y1, x2, y2 };
                         const auto areaIdentity = rectArea(identityRect);
@@ -225,7 +225,7 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                         auto areaPerson = rectArea(personRect);
                         auto areaOverlapping = rectArea(rectOverlapping);
 
-                        float areaOverlappingPercentageAvg = (areaOverlapping / areaPerson + areaOverlapping / areaIdentity) * 0.5;
+                        float areaOverlappingPercentageAvg = (areaOverlapping / areaPerson + areaOverlapping / areaIdentity) * 0.5f;
 
                         if (areaOverlappingPercentageAvg > areaOverlappingPercentageBest)
                         {
@@ -534,24 +534,24 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                             float mse = 0.f;
                             int nFrames = 0;
                             int lastValidFrameNumber = 0;
-                            for (auto lastFrameNumber = frameNumber - 1; lastFrameNumber > lastKeyframeNumber; --lastFrameNumber)
+                            for (auto f = frameNumber - 1; f > lastKeyframeNumber; --f)
                             {
-                                if (person.frames.find(lastFrameNumber) != person.frames.end())
+                                if (person.frames.find(f) != person.frames.end())
                                 {
-                                    const auto& lastFrame = person.frames[lastFrameNumber][iRawFrameType][iKeypointId];
+                                    const auto& lastFrame = person.frames[f][iRawFrameType][iKeypointId];
                                     if (lastFrame.confidence > 0.f)
                                     {
                                         if (nFrames == 0)
                                         {
-                                            lastValidFrameNumber = lastFrameNumber;
+                                            lastValidFrameNumber = f;
                                         }
 
                                         cv::Point2f lastFramePos(lastFrame.x, lastFrame.y);
 
-                                        float t = float(lastFrameNumber - lastKeyframeNumber) / float(frameNumber - lastKeyframeNumber);
+                                        float t = float(f - lastKeyframeNumber) / float(frameNumber - lastKeyframeNumber);
                                         cv::Point2f estimatedPos = lastKeyFramePos * (1 - t) + currentFramePos * t;
 
-                                        mse += squareLengthPoint2(estimatedPos - lastFramePos);
+                                        mse += squareLengthPoint2f(estimatedPos - lastFramePos);
                                         nFrames++;
                                     }
                                 }
@@ -693,8 +693,8 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
                     cv::Point3d estimatedTranslation = lastKeyTranslation * (1 - t) + translation * t;
                     cv::Point3d estimatedRotation = lastKeyRotation * (1 - t) + rotation * t;
 
-                    mseTranslation += squareLengthPoint3(estimatedTranslation - tt);
-                    mseRotation += squareLengthPoint3(estimatedRotation - rr);
+                    mseTranslation += squareLengthPoint3d(estimatedTranslation - tt);
+                    mseRotation += squareLengthPoint3d(estimatedRotation - rr);
                     nFrames++;
                 }
 
@@ -750,7 +750,7 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
     {
         jRoots.push_back(nlohmann::json{});
         nlohmann::json jPersons;
-        int numKeyFrames = 0;
+        std::size_t numKeyFrames = 0;
         std::vector<PersonInfo*> personsThisSegment;
         int startFrameNumberSegment = std::numeric_limits<int>::max();
         int endFrameNumberSegment = 0;

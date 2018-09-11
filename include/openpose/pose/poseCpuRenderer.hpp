@@ -33,11 +33,11 @@ namespace op
                         {
                             struct Keyframe
                             {
-                                int frameNumber;
+                                std::size_t frameNumber;
                                 float x;
                                 float y;
 
-                                Keyframe(int _frameNumber, float _x, float _y)
+                                Keyframe(std::size_t _frameNumber, float _x, float _y)
                                     : frameNumber(_frameNumber)
                                     , x(_x)
                                     , y(_y)
@@ -65,11 +65,11 @@ namespace op
                         }
                     };
 
-                    std::map<int, std::shared_ptr<Keypoint>> keypoints;
+                    std::map<std::size_t, std::shared_ptr<Keypoint>> keypoints;
 
                     explicit Keypoints(const json& j)
                     {
-                        for (int i = 0; i < j.size(); ++i)
+                        for (std::size_t i = 0; i < j.size(); ++i)
                         {
                             keypoints[i] = std::make_shared<Keypoint>(j[i]);
                         }
@@ -88,7 +88,7 @@ namespace op
 
             struct Keyframe3D
             {
-                int frameNumber;
+                std::size_t frameNumber;
                 cv::Point3d value;
 
                 explicit Keyframe3D(const json& j)
@@ -181,8 +181,8 @@ namespace op
 
         void renderPoseTrackingInfo(Array<float>& outputData, const unsigned long long frameNumber);
 
-        template <typename T>
-        T lerp(const T& p1, const T& p2, int frameNumber1, int frameNumber2, int frameNumberCurrent)
+        template <typename T1, typename T2>
+        T1 lerp(const T1& p1, const T1& p2, T2 frameNumber1, T2 frameNumber2, T2 frameNumberCurrent)
         {
             float t = float(frameNumberCurrent - frameNumber1) / float(frameNumber2 - frameNumber1);
 

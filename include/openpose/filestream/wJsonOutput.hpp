@@ -11,7 +11,7 @@ namespace op
     class WJsonOutput : public WorkerConsumer<TDatums>
     {
     public:
-        inline explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
+        explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
             : mVideoReader{ videoReader }
             , mJsonPath{ jsonPath }
         {
@@ -21,16 +21,16 @@ namespace op
             mVideoNumFrames = mVideoReader->get(CV_CAP_PROP_FRAME_COUNT);
         }
 
-        inline ~WJsonOutput()
+        ~WJsonOutput()
         {
             postProcess();
         }
 
-        inline void initializationOnThread()
+        void initializationOnThread()
         {
         }
 
-        inline void workConsumer(const TDatums& tDatums)
+        void workConsumer(const TDatums& tDatums)
         {
             try
             {
@@ -42,7 +42,7 @@ namespace op
                     // Profiling speed
                     const auto profilerKey = Profiler::timerInit(__LINE__, __FUNCTION__, __FILE__);
 
-                    for (auto i = 0u; i < tDatums->size(); i++)
+                    for (std::size_t i = 0; i < tDatums->size(); i++)
                     {
                         const auto& tDatum = (*tDatums)[i];
 
@@ -71,7 +71,6 @@ namespace op
         }
 
     private:
-
         std::shared_ptr<op::VideoReader> mVideoReader;
         std::string mJsonPath;
 
@@ -143,7 +142,7 @@ namespace op
         {
             int startFrameNumber;
             int endFrameNumber;
-            int numKeyFrames;
+            std::size_t numKeyFrames;
 
             PersonInfo()
                 : startFrameNumber{ 0 }
@@ -174,41 +173,66 @@ namespace op
         DELETE_COPY(WJsonOutput);
 
         template<typename T>
-        inline float squareLengthPoint3(const T& p)
+        float squareLengthPoint3f(const T& p)
         {
             return p.x*p.x + p.y*p.y + p.z*p.z;
         }
 
         template<typename T>
-        inline float lengthPoint3(const T& p)
+        float lengthPoint3f(const T& p)
         {
             return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
         }
 
         template<typename T>
-        inline float squareLengthPoint2(const T& p)
+        float squareLengthPoint2f(const T& p)
         {
             return p.x*p.x + p.y*p.y;
         }
 
         template<typename T>
-        inline float lengthPoint2(const T& p)
+        float lengthPoint2f(const T& p)
         {
             return sqrt(p.x*p.x + p.y*p.y);
         }
 
-        inline cv::Point2f normalizePoint2(const cv::Point2f& p)
+        template<typename T>
+        inline double squareLengthPoint3d(const T& p)
         {
-            auto length = lengthPoint2(p);
+            return p.x*p.x + p.y*p.y + p.z*p.z;
+        }
+
+        template<typename T>
+        double lengthPoint3d(const T& p)
+        {
+            return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        }
+
+        template<typename T>
+        inline double squareLengthPoint2d(const T& p)
+        {
+            return p.x*p.x + p.y*p.y;
+        }
+
+        template<typename T>
+        double lengthPoint2d(const T& p)
+        {
+            return sqrt(p.x*p.x + p.y*p.y);
+        }
+
+        cv::Point2f normalizePoint2f(const cv::Point2f& p)
+        {
+            auto length = lengthPoint2f(p);
             return cv::Point2f(p.x / length, p.y / length);
         }
 
-        inline float rectArea(const std::tuple<float, float, float, float>& rect)
+        float rectArea(const std::tuple<float, float, float, float>& rect)
         {
             return (std::get<2>(rect) - std::get<0>(rect)) * (std::get<3>(rect) - std::get<1>(rect));
         }
 
-        inline std::tuple<float, float, float, float> overlappingRect(const std::tuple<float, float, float, float>& rect1,
+        std::tuple<float, float, float, float> overlappingRect(
+            const std::tuple<float, float, float, float>& rect1,
             const std::tuple<float, float, float, float>& rect2)
         {
             float left = std::max(std::get<0>(rect1), std::get<0>(rect2));
@@ -222,7 +246,7 @@ namespace op
         //    double mseHeadTranslationThreshold = 0.35, double mseHeadRotationThreshold = 0.03,
         //    int indexerInterval = 200);
         void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 32.f,
-            double mseHeadTranslationThreshold = 1.0, double mseHeadRotationThreshold = 0.1,
+            double mseHeadTranslationThreshold = 0.6, double mseHeadRotationThreshold = 0.06,
             int indexerInterval = 30, int maxFramesPerSegment = 10000);
     };
 }

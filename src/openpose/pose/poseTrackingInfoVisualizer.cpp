@@ -180,15 +180,14 @@ namespace op
                             frameNumber >= track.front()->frameNumber &&
                             frameNumber <= track.back()->frameNumber)
                         {
-                            for (auto frame = track.begin(); frame != track.end(); ++frame)
+                            for (auto f = track.begin(); f != track.end(); ++f)
                             {
-                                if ((*frame)->frameNumber >= frameNumber &&
-                                    frame != track.begin())
+                                if ((*f)->frameNumber >= frameNumber && f != track.begin())
                                 {
                                     auto lerpValue = lerp(
-                                        (*(frame - 1))->value, (*frame)->value,
-                                        (*(frame - 1))->frameNumber,
-                                        (*frame)->frameNumber, frameNumber);
+                                        (*(f - 1))->value, (*f)->value,
+                                        (*(f - 1))->frameNumber,
+                                        (*f)->frameNumber, frameNumber);
 
                                     translation = (cv::Mat_<double>(3, 1) << lerpValue.x, lerpValue.y, lerpValue.z);
 
@@ -207,15 +206,15 @@ namespace op
                             frameNumber >= track.front()->frameNumber &&
                             frameNumber <= track.back()->frameNumber)
                         {
-                            for (auto frame = track.begin(); frame != track.end(); ++frame)
+                            for (auto f = track.begin(); f != track.end(); ++f)
                             {
-                                if ((*frame)->frameNumber >= frameNumber &&
-                                    frame != track.begin())
+                                if ((*f)->frameNumber >= frameNumber &&
+                                    f != track.begin())
                                 {
                                     auto lerpValue = lerp(
-                                        (*(frame - 1))->value, (*frame)->value,
-                                        (*(frame - 1))->frameNumber,
-                                        (*frame)->frameNumber, frameNumber);
+                                        (*(f - 1))->value, (*f)->value,
+                                        (*(f - 1))->frameNumber,
+                                        (*f)->frameNumber, frameNumber);
 
                                     rotation = (cv::Mat_<double>(3, 1) << lerpValue.x, lerpValue.y, lerpValue.z);
 

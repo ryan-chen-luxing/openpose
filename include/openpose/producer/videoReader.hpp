@@ -59,14 +59,14 @@ namespace op
             }
         };
 
-        std::vector<int> framesPoseTracking;
-        ClassificationInfo classificationInfo;
-
         explicit VideoInfo(const json & j)
             : classificationInfo{ j["classificationInfo"] }
             , framesPoseTracking{ j["framesPoseTracking"] }
         {
         }
+
+        ClassificationInfo classificationInfo;
+        std::vector<int> framesPoseTracking;
     };
 
     /**
@@ -117,7 +117,7 @@ namespace op
         CameraParameterReader mCameraParameterReader;
 
         std::shared_ptr<VideoInfo> mVideoInfo;
-        int mIndexFramePoseTracking;
+        std::size_t mIndexFramePoseTracking;
 
         cv::Mat getRawFrame();
 
