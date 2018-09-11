@@ -9,7 +9,8 @@ set(SOURCES_OP_FILESTREAM bvhSaver.cpp
     keypointSaver.cpp
     peopleJsonSaver.cpp
     udpSender.cpp
-    videoSaver.cpp)
+    videoSaver.cpp
+    wJsonOutput.cpp)
 
 include(${CMAKE_SOURCE_DIR}/cmake/Utils.cmake)
 prepend(SOURCES_OP_FILESTREAM_WITH_CP ${CMAKE_CURRENT_SOURCE_DIR} ${SOURCES_OP_FILESTREAM})
