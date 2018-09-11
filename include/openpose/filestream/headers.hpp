@@ -21,6 +21,7 @@
 #include <openpose/filestream/wImageSaver.hpp>
 #include <openpose/filestream/wHeatMapSaver.hpp>
 #include <openpose/filestream/wPeopleJsonSaver.hpp>
+#include <openpose/filestream/wJsonOutput.hpp>
 #include <openpose/filestream/wPoseSaver.hpp>
 #include <openpose/filestream/wUdpSender.hpp>
 #include <openpose/filestream/wVideoSaver.hpp>

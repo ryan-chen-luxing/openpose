@@ -1,4 +1,4 @@
-#include <openpose/filestream/wPeopleJsonSaver.hpp>
+#include <openpose/filestream/wJsonOutput.hpp>
 #include <algorithm>
 #include <limits>
 #include <sstream>
