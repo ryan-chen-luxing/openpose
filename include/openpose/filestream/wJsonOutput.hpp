@@ -46,15 +46,15 @@ namespace op
                     {
                         const auto& tDatum = (*tDatums)[i];
 
-                        mRawFrames.push_back(FrameInfo(
-                            tDatum.frameNumber,
-                            std::vector<Array<float>>{
+                        std::vector<Array<float>> keypoints{
                             tDatum.poseKeypoints,
-                                tDatum.faceKeypoints,
-                                tDatum.handKeypoints[0],
-                                tDatum.handKeypoints[1]
-                        }
-                        ));
+                            tDatum.faceKeypoints,
+                            tDatum.handKeypoints[0],
+                            tDatum.handKeypoints[1]
+                        };
+
+                        mRawFrames.push_back(FrameInfo(
+                            tDatum.frameNumber, keypoints));
                     }
                     // Profiling speed
                     Profiler::timerEnd(profilerKey);
@@ -79,7 +79,7 @@ namespace op
             int frameNumber;
             std::vector<Array<float>> keypoints;
 
-            FrameInfo(int frameNumber_, std::vector<Array<float>>& keypoints_)
+            FrameInfo(int frameNumber_, const std::vector<Array<float>>& keypoints_)
                 : frameNumber{ frameNumber_ }
                 , keypoints{ keypoints_ }
             {}
