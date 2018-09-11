@@ -7,7 +7,7 @@
 namespace op
 {
     void renderPoseKeypointsCpu(Array<float>& frameArray, const Array<float>& poseKeypoints, const PoseModel poseModel,
-                                const float renderThreshold, const unsigned long long frameNumber, const bool blendOriginalFrame)
+                                const float renderThreshold, const std::size_t frameNumber, const bool blendOriginalFrame)
     {
         try
         {
