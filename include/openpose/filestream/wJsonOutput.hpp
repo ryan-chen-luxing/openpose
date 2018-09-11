@@ -19,13 +19,64 @@ namespace op
     class WJsonOutput : public WorkerConsumer<TDatums>
     {
     public:
-        explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath);
+        explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
+            : mVideoReader{ videoReader }
+            , mJsonPath{ jsonPath }
+        {
+            mVideoWidth = mVideoReader->get(CV_CAP_PROP_FRAME_WIDTH);
+            mVideoHeight = mVideoReader->get(CV_CAP_PROP_FRAME_HEIGHT);
+            mVideoFPS = mVideoReader->get(CV_CAP_PROP_FPS);
+            mVideoNumFrames = mVideoReader->get(CV_CAP_PROP_FRAME_COUNT);
+        }
 
-        ~WJsonOutput();
+        ~WJsonOutput()
+        {
+            postProcess();
+        }
 
-        void initializationOnThread();
+        void initializationOnThread()
+        {
+        }
 
-        void workConsumer(const TDatums& tDatums);
+        void workConsumer(const TDatums& tDatums)
+        {
+            try
+            {
+                if (checkNoNullNorEmpty(tDatums))
+                {
+                    // Debugging log
+                    dLog("", Priority::Low, __LINE__, __FUNCTION__, __FILE__);
+
+                    // Profiling speed
+                    const auto profilerKey = Profiler::timerInit(__LINE__, __FUNCTION__, __FILE__);
+
+                    for (auto i = 0u; i < tDatums->size(); i++)
+                    {
+                        const auto& tDatum = (*tDatums)[i];
+
+                        mRawFrames.push_back(FrameInfo(
+                            tDatum.frameNumber,
+                            std::vector<Array<float>>{
+                            tDatum.poseKeypoints,
+                                tDatum.faceKeypoints,
+                                tDatum.handKeypoints[0],
+                                tDatum.handKeypoints[1]
+                        }
+                        ));
+                    }
+                    // Profiling speed
+                    Profiler::timerEnd(profilerKey);
+                    Profiler::printAveragedTimeMsOnIterationX(profilerKey, __LINE__, __FUNCTION__, __FILE__);
+                    // Debugging log
+                    dLog("", Priority::Low, __LINE__, __FUNCTION__, __FILE__);
+                }
+            }
+            catch (const std::exception& e)
+            {
+                this->stop();
+                error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+            }
+        }
 
     private:
         //void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 4.f,
@@ -186,69 +237,6 @@ namespace op
         float right = std::min(std::get<2>(rect1), std::get<2>(rect2));
         float bottom = std::min(std::get<3>(rect1), std::get<3>(rect2));
         return std::tuple<float, float, float, float> {left, top, right, bottom};
-    }
-
-    template<typename TDatums>
-    WJsonOutput<TDatums>::WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
-        : mVideoReader{ videoReader }
-        , mJsonPath{ jsonPath }
-    {
-        mVideoWidth = mVideoReader->get(CV_CAP_PROP_FRAME_WIDTH);
-        mVideoHeight = mVideoReader->get(CV_CAP_PROP_FRAME_HEIGHT);
-        mVideoFPS = mVideoReader->get(CV_CAP_PROP_FPS);
-        mVideoNumFrames = mVideoReader->get(CV_CAP_PROP_FRAME_COUNT);
-    }
-
-    template<typename TDatums>
-    WJsonOutput<TDatums>::~WJsonOutput()
-    {
-        postProcess();
-    }
-
-    template<typename TDatums>
-    void WJsonOutput<TDatums>::initializationOnThread()
-    {
-    }
-
-    template<typename TDatums>
-    void WJsonOutput<TDatums>::workConsumer(const TDatums& tDatums)
-    {
-        try
-        {
-            if (checkNoNullNorEmpty(tDatums))
-            {
-                // Debugging log
-                dLog("", Priority::Low, __LINE__, __FUNCTION__, __FILE__);
-
-                // Profiling speed
-                const auto profilerKey = Profiler::timerInit(__LINE__, __FUNCTION__, __FILE__);
-
-                for (auto i = 0u; i < tDatums->size(); i++)
-                {
-                    const auto& tDatum = (*tDatums)[i];
-
-                    mRawFrames.push_back(FrameInfo(
-                        tDatum.frameNumber,
-                        std::vector<Array<float>>{
-                        tDatum.poseKeypoints,
-                            tDatum.faceKeypoints,
-                            tDatum.handKeypoints[0],
-                            tDatum.handKeypoints[1]
-                    }
-                    ));
-                }
-                // Profiling speed
-                Profiler::timerEnd(profilerKey);
-                Profiler::printAveragedTimeMsOnIterationX(profilerKey, __LINE__, __FUNCTION__, __FILE__);
-                // Debugging log
-                dLog("", Priority::Low, __LINE__, __FUNCTION__, __FILE__);
-            }
-        }
-        catch (const std::exception& e)
-        {
-            this->stop();
-            error(e.what(), __LINE__, __FUNCTION__, __FILE__);
-        }
     }
 
     COMPILE_TEMPLATE_DATUM(WJsonOutput);
