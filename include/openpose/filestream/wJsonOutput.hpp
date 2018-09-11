@@ -19,7 +19,7 @@ namespace op
     class WJsonOutput : public WorkerConsumer<TDatums>
     {
     public:
-        explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
+        inline explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
             : mVideoReader{ videoReader }
             , mJsonPath{ jsonPath }
         {
@@ -29,16 +29,16 @@ namespace op
             mVideoNumFrames = mVideoReader->get(CV_CAP_PROP_FRAME_COUNT);
         }
 
-        ~WJsonOutput()
+        inline ~WJsonOutput()
         {
             postProcess();
         }
 
-        void initializationOnThread()
+        inline void initializationOnThread()
         {
         }
 
-        void workConsumer(const TDatums& tDatums)
+        inline void workConsumer(const TDatums& tDatums)
         {
             try
             {
@@ -188,30 +188,30 @@ namespace op
         DELETE_COPY(WJsonOutput);
 
         template<typename T>
-        float squareLengthPoint3(const T& p)
+        inline float squareLengthPoint3(const T& p)
         {
             return p.x*p.x + p.y*p.y + p.z*p.z;
         }
 
         template<typename T>
-        float lengthPoint3(const T& p)
+        inline float lengthPoint3(const T& p)
         {
             return sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
         }
 
         template<typename T>
-        float squareLengthPoint2(const T& p)
+        inline float squareLengthPoint2(const T& p)
         {
             return p.x*p.x + p.y*p.y;
         }
 
         template<typename T>
-        float lengthPoint2(const T& p)
+        inline float lengthPoint2(const T& p)
         {
             return sqrt(p.x*p.x + p.y*p.y);
         }
 
-        cv::Point2f normalizePoint2(const cv::Point2f& p)
+        inline cv::Point2f normalizePoint2(const cv::Point2f& p)
         {
             auto length = lengthPoint2(p);
             return cv::Point2f(p.x / length, p.y / length);
