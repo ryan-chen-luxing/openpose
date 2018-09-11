@@ -302,7 +302,7 @@ namespace op
                         const auto radius = thicknessRatio / 2;
 
                         // Draw lines
-                        for (auto iPair = 0u; iPair < pairs.size(); iPair += 2)
+                        for (std::size_t iPair = 0; iPair < pairs.size(); iPair += 2)
                         {
                             std::pair<unsigned int, unsigned int> pair{ pairs[iPair], pairs[iPair + 1] };
 
@@ -326,7 +326,7 @@ namespace op
                         }
 
                         // Draw circles
-                        for (int part = 0; part < std::get<1>(person).front().size(); ++part)
+                        for (std::size_t part = 0; part < std::get<1>(person).front().size(); ++part)
                         {
                             const auto& keypoint = std::get<1>(person).front()[part];
                             if (keypoint.x > 0 && keypoint.y > 0)

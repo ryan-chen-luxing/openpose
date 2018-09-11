@@ -12,12 +12,12 @@ namespace op
 
         const auto numberKeypoints = keypoints.getSize(1);
         // Keypoints
-        for (auto person = 0; person < keypoints.getSize(0); person++)
+        for (std::size_t person = 0; person < keypoints.getSize(0); person++)
         {
             float average = 0.f;
 
             // Draw circles
-            for (auto i = 0; i < keypointsIndices.size(); i++)
+            for (std::size_t i = 0; i < keypointsIndices.size(); i++)
             {
                 auto part = keypointsIndices[i];
                 const auto faceIndex = (person * numberKeypoints + part) * keypoints.getSize(2);

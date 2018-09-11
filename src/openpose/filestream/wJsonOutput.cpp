@@ -926,9 +926,10 @@ void WJsonOutput<TDatums>::postProcess(float confidenceThreshold, float mseLerpT
         std::ofstream ofile(ss.str() + ".json");
         ofile << jRoot;
         ofile.close();
-
+#ifdef _WIN32
         std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
         system(command.c_str());
+#endif
     }
 }
 

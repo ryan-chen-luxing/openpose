@@ -76,7 +76,7 @@ namespace op
                         // 2D image points.
                         std::vector<cv::Point2d> image_points;
                         std::vector<cv::Point3d> model_points;
-                        for (auto i = 0; i < keypointsPoseEstimationIndices.size(); i++)
+                        for (std::size_t i = 0; i < keypointsPoseEstimationIndices.size(); i++)
                         {
                             auto part = keypointsPoseEstimationIndices[i];
                             const auto partIndex = (person * numberKeypoints + part) * poseKeypoints.getSize(2);
