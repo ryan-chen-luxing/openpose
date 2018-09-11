@@ -1,4 +1,12 @@
 #include <openpose/filestream/wJsonOutput.hpp>
+#include <openpose/utilities/fastMath.hpp>
+#include <openpose/utilities/keypoint.hpp>
+#include <opencv2/opencv.hpp>
+#include <map>
+#include <math.h>
+#include <stdlib.h>
+#include <nlohmann/json.hpp>
+#include <fstream>
 #include <algorithm>
 #include <limits>
 #include <sstream>

@@ -927,9 +927,10 @@ namespace op
             // enabled, etc.)
             if (!writeJsonCleaned.empty())
             {
-                //const auto peopleJsonSaver = std::make_shared<PeopleJsonSaver>(writeJsonCleaned);
-                //mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
-                mOutputWs.emplace_back(std::make_shared<WJsonOutput<TDatumsSP>>(wrapperStructOutput.videoReader, wrapperStructOutput.writeJson));
+                const auto peopleJsonSaver = std::make_shared<PeopleJsonSaver>(writeJsonCleaned);
+                mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
+
+                //mOutputWs.emplace_back(std::make_shared<WJsonOutput<TDatumsSP>>(wrapperStructOutput.videoReader, wrapperStructOutput.writeJson));
             }
             // Write people pose data on disk (COCO validation json format)
             if (!wrapperStructOutput.writeCocoJson.empty())

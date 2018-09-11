@@ -4,14 +4,6 @@
 #include <openpose/core/common.hpp>
 #include <openpose/thread/workerConsumer.hpp>
 #include <openpose/producer/videoReader.hpp>
-#include <openpose/utilities/fastMath.hpp>
-#include <openpose/utilities/keypoint.hpp>
-#include <opencv2/opencv.hpp>
-#include <map>
-#include <math.h>
-#include <stdlib.h>
-#include <nlohmann/json.hpp>
-#include <fstream>
 
 namespace op
 {
@@ -229,7 +221,7 @@ namespace op
         //void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 4.f,
         //    double mseHeadTranslationThreshold = 0.35, double mseHeadRotationThreshold = 0.03,
         //    int indexerInterval = 200);
-        inline void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 32.f,
+        void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 32.f,
             double mseHeadTranslationThreshold = 1.0, double mseHeadRotationThreshold = 0.1,
             int indexerInterval = 30, int maxFramesPerSegment = 10000);
     };
