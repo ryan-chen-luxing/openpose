@@ -55,7 +55,7 @@ namespace op
     std::pair<int, std::string> PoseTrackingInfoVisualizer::renderPose(
         Array<float>& outputData,
         const Array<float>& poseKeypoints,
-        const unsigned long long frameNumber,
+        const std::size_t frameNumber,
         const float scaleInputToOutput,
         const float scaleNetToOutput)
     {

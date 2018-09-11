@@ -16,8 +16,8 @@ namespace op
     {
         struct Person
         {
-            int startFrame;
-            int endFrame;
+            std::size_t startFrame;
+            std::size_t endFrame;
             int id;
 
             struct Track
@@ -148,10 +148,11 @@ namespace op
                         const float alphaHeatMap = POSE_DEFAULT_ALPHA_HEAT_MAP,
                         const unsigned int elementToRender = 0u);
 
-        std::pair<int, std::string> renderPose(Array<float>& outputData, const Array<float>& poseKeypoints,
-                                               const unsigned long long frameNumber,
-                                               const float scaleInputToOutput,
-                                               const float scaleNetToOutput = -1.f);
+        std::pair<int, std::string> renderPose(Array<float>& outputData,
+            const Array<float>& poseKeypoints,
+            const std::size_t frameNumber,
+            const float scaleInputToOutput,
+            const float scaleNetToOutput = -1.f);
     private:
         DELETE_COPY(PoseCpuRenderer);
     };
@@ -168,7 +169,7 @@ namespace op
         std::pair<int, std::string> renderPose(
             Array<float>& outputData,
             const Array<float>& poseKeypoints,
-            const unsigned long long frameNumber,
+            const std::size_t frameNumber,
             const float scaleInputToOutput,
             const float scaleNetToOutput = -1.f);
 
@@ -184,9 +185,9 @@ namespace op
         template <typename T1, typename T2>
         T1 lerp(const T1& p1, const T1& p2, T2 frameNumber1, T2 frameNumber2, T2 frameNumberCurrent)
         {
-            float t = float(frameNumberCurrent - frameNumber1) / float(frameNumber2 - frameNumber1);
+            auto t = float(frameNumberCurrent - frameNumber1) / float(frameNumber2 - frameNumber1);
 
-            return p1 * (1 - t) + p2 * t;
+            return p1 - p1 * t + p2 * t;
         }
 
         std::shared_ptr<PoseTrackingInfo> mPoseTrackingInfo;

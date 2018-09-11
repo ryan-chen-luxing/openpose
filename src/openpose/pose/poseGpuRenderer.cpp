@@ -61,10 +61,10 @@ namespace op
     }
 
     std::pair<int, std::string> PoseGpuRenderer::renderPose(Array<float>& outputData,
-                                                            const Array<float>& poseKeypoints,
-                                                            const unsigned long long frameNumber,
-                                                            const float scaleInputToOutput,
-                                                            const float scaleNetToOutput)
+        const Array<float>& poseKeypoints,
+        const std::size_t frameNumber,
+        const float scaleInputToOutput,
+        const float scaleNetToOutput)
     {
         try
         {

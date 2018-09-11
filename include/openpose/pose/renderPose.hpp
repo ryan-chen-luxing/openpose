@@ -9,7 +9,7 @@
 namespace op
 {
     OP_API void renderPoseKeypointsCpu(Array<float>& frameArray, const Array<float>& poseKeypoints,
-                                       const PoseModel poseModel, const float renderThreshold, const unsigned long long frameNumber,
+                                       const PoseModel poseModel, const float renderThreshold, const std::size_t frameNumber,
                                        const bool blendOriginalFrame = true);
 
     OP_API void renderPoseKeypointsGpu(float* framePtr, const PoseModel poseModel, const int numberPeople,
