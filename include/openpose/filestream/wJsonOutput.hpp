@@ -211,6 +211,21 @@ namespace op
             return cv::Point2f(p.x / length, p.y / length);
         }
 
+        inline float rectArea(const std::tuple<float, float, float, float>& rect)
+        {
+            return (std::get<2>(rect) - std::get<0>(rect)) * (std::get<3>(rect) - std::get<1>(rect));
+        }
+
+        inline std::tuple<float, float, float, float> overlappingRect(const std::tuple<float, float, float, float>& rect1,
+            const std::tuple<float, float, float, float>& rect2)
+        {
+            float left = std::max(std::get<0>(rect1), std::get<0>(rect2));
+            float top = std::max(std::get<1>(rect1), std::get<1>(rect2));
+            float right = std::min(std::get<2>(rect1), std::get<2>(rect2));
+            float bottom = std::min(std::get<3>(rect1), std::get<3>(rect2));
+            return std::tuple<float, float, float, float> {left, top, right, bottom};
+        }
+
         //void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 4.f,
         //    double mseHeadTranslationThreshold = 0.35, double mseHeadRotationThreshold = 0.03,
         //    int indexerInterval = 200);
@@ -1139,20 +1154,6 @@ namespace op
 #include <openpose/utilities/pointerContainer.hpp>
 namespace op
 {
-    inline float rectArea(const std::tuple<float, float, float, float>& rect)
-    {
-        return (std::get<2>(rect) - std::get<0>(rect)) * (std::get<3>(rect) - std::get<1>(rect));
-    }
-
-    inline std::tuple<float, float, float, float> overlappingRect(const std::tuple<float, float, float, float>& rect1,
-        const std::tuple<float, float, float, float>& rect2)
-    {
-        float left = std::max(std::get<0>(rect1), std::get<0>(rect2));
-        float top = std::max(std::get<1>(rect1), std::get<1>(rect2));
-        float right = std::min(std::get<2>(rect1), std::get<2>(rect2));
-        float bottom = std::min(std::get<3>(rect1), std::get<3>(rect2));
-        return std::tuple<float, float, float, float> {left, top, right, bottom};
-    }
 
     COMPILE_TEMPLATE_DATUM(WJsonOutput);
 }
