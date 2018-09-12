@@ -4,8 +4,7 @@
 #include <openpose/core/common.hpp>
 #include <openpose/thread/workerConsumer.hpp>
 #include <openpose/producer/videoReader.hpp>
-
-
+#include <openpose/pose/enumClasses.hpp>
 #include <openpose/utilities/fastMath.hpp>
 #include <openpose/utilities/keypoint.hpp>
 #include <opencv2/opencv.hpp>
@@ -24,8 +23,9 @@ namespace op
     class OP_API WJsonOutput : public WorkerConsumer<TDatums>
     {
     public:
-        explicit WJsonOutput(std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
-            : mVideoReader{ videoReader }
+        explicit WJsonOutput(PoseModel poseModel, std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
+            : mPoseModel{ poseModel }
+            , mVideoReader{ videoReader }
             , mJsonPath{ jsonPath }
         {
             mVideoWidth = mVideoReader->get(CV_CAP_PROP_FRAME_WIDTH);
@@ -86,6 +86,7 @@ namespace op
     private:
         std::shared_ptr<op::VideoReader> mVideoReader;
         std::string mJsonPath;
+        PoseModel mPoseModel;
 
         struct FrameInfo
         {
@@ -498,10 +499,25 @@ namespace op
             }
 
             // generate face vectors
-            const std::vector<unsigned int> keypointsPoseEstimationIndices
+            const std::vector<std::size_t> keypointsPoseEstimationIndicesBody25
             {
                 0, 15, 16, 17, 18
             };
+
+            const std::vector<std::size_t> keypointsPoseEstimationIndicesCoco
+            {
+                0, 14, 15, 16, 17
+            };
+
+            std::vector<std::size_t> keypointsPoseEstimationIndices;
+            if (mPoseModel == PoseModel::BODY_25)
+            {
+                keypointsPoseEstimationIndices = keypointsPoseEstimationIndicesBody25;
+            }
+            else if (mPoseModel == PoseModel::COCO_18)
+            {
+                keypointsPoseEstimationIndices = keypointsPoseEstimationIndicesCoco;
+            }
 
             // 3D model points.
             const std::vector<cv::Point3d> keypointsReferencePose
@@ -513,7 +529,7 @@ namespace op
                 cv::Point3d(0.644, 0.130, -1)
             };
 
-            const std::vector<unsigned int> keypointsFaceEstimationIndices
+            const std::vector<std::size_t> keypointsFaceEstimationIndices
             {
                 //36, 45, 39, 42, 
                 8, 19, 24

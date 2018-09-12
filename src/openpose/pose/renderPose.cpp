@@ -44,10 +44,26 @@ namespace op
                     // Keypoints
                     for (auto person = 0; person < poseKeypoints.getSize(0); person++)
                     {
-                        const std::vector<unsigned int> keypointsPoseEstimationIndices
+                        // generate face vectors
+                        const std::vector<std::size_t> keypointsPoseEstimationIndicesBody25
                         {
                             0, 15, 16, 17, 18
                         };
+
+                        const std::vector<std::size_t> keypointsPoseEstimationIndicesCoco
+                        {
+                            0, 14, 15, 16, 17
+                        };
+
+                        std::vector<std::size_t> keypointsPoseEstimationIndices;
+                        if (poseModel == PoseModel::BODY_25)
+                        {
+                            keypointsPoseEstimationIndices = keypointsPoseEstimationIndicesBody25;
+                        }
+                        else if (poseModel == PoseModel::COCO_18)
+                        {
+                            keypointsPoseEstimationIndices = keypointsPoseEstimationIndicesCoco;
+                        }
 
                         /*
                         // 3D model points.
