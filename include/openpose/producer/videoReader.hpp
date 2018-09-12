@@ -61,12 +61,15 @@ namespace op
 
         explicit VideoInfo(const json & j)
             : classificationInfo{ j["classificationInfo"] }
-            , framesPoseTracking{ j["framesPoseTracking"] }
         {
+            for (auto i : j["framesPoseTracking"])
+            {
+                framesPoseTracking.push_back(i);
+            }
         }
 
         ClassificationInfo classificationInfo;
-        std::vector<int> framesPoseTracking;
+        std::vector<std::size_t> framesPoseTracking;
     };
 
     /**

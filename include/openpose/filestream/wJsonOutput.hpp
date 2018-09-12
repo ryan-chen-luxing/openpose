@@ -153,8 +153,8 @@ namespace op
 
         struct PersonInfo
         {
-            int startFrameNumber;
-            int endFrameNumber;
+            std::size_t startFrameNumber;
+            std::size_t endFrameNumber;
             std::size_t numKeyFrames;
 
             PersonInfo()
@@ -267,10 +267,10 @@ namespace op
             std::vector<std::size_t> personsBeingTracked;
             for (const auto& rawframe : this->mRawFrames)
             {
-                auto numberPeople = 0;
-                for (auto vectorIndex = 0u; vectorIndex < rawframe.keypoints.size(); vectorIndex++)
+                std::size_t numberPeople = 0;
+                for (std::size_t vectorIndex = 0u; vectorIndex < rawframe.keypoints.size(); vectorIndex++)
                 {
-                    numberPeople = fastMax(numberPeople, rawframe.keypoints[vectorIndex].getSize(0));
+                    numberPeople = fastMax(numberPeople, std::size_t(rawframe.keypoints[vectorIndex].getSize(0)));
                 }
 
                 if (!personsBeingTracked.empty())
@@ -285,13 +285,13 @@ namespace op
 
                 std::vector<std::size_t> personsMatched;
                 std::vector<std::size_t> newPersonsIdentified;
-                for (auto personIndex = 0; personIndex < numberPeople; personIndex++)
+                for (std::size_t personIndex = 0; personIndex < numberPeople; personIndex++)
                 {
                     const auto personRectangle = getKeypointsRectangle(rawframe.keypoints[0], personIndex, confidenceThreshold);
                     if (personRectangle.area() > 0)
                     {
                         std::vector<std::vector<FrameRaw>> rawFrames;
-                        for (auto vectorIndex = 0u; vectorIndex < rawframe.keypoints.size(); vectorIndex++)
+                        for (std::size_t vectorIndex = 0; vectorIndex < rawframe.keypoints.size(); vectorIndex++)
                         {
                             const auto& keypoints = rawframe.keypoints[vectorIndex];
 
@@ -303,7 +303,7 @@ namespace op
                             {
                                 const auto finalIndex = personIndex * numberElementsPerRaw;
 
-                                for (auto part = 0; part < keypoints.getSize(1); part++)
+                                for (std::size_t part = 0; part < keypoints.getSize(1); part++)
                                 {
                                     auto confidence = keypoints[finalIndex + part * keypoints.getSize(2) + 2];
                                     auto x = keypoints[finalIndex + part * keypoints.getSize(2)];
@@ -334,9 +334,9 @@ namespace op
                                 const auto& rawFramesTracked = personTracked.frames.at(rawframe.frameNumber - 1);
 
                                 auto numValidParts = 0;
-                                for (auto trackingType = 0; trackingType < rawFrames.size(); ++trackingType)
+                                for (std::size_t trackingType = 0; trackingType < rawFrames.size(); ++trackingType)
                                 {
-                                    for (auto part = 0; part < rawFrames[trackingType].size(); ++part)
+                                    for (std::size_t part = 0; part < rawFrames[trackingType].size(); ++part)
                                     {
                                         const auto rawFrame = rawFrames[trackingType][part];
                                         const auto rawFrameTracked = rawFramesTracked[trackingType][part];
@@ -559,7 +559,7 @@ namespace op
                     // 2D image points.
                     std::vector<cv::Point2d> image_points;
                     std::vector<cv::Point3d> model_points;
-                    for (auto i = 0; i < keypointsPoseEstimationIndices.size(); i++)
+                    for (std::size_t i = 0; i < keypointsPoseEstimationIndices.size(); i++)
                     {
                         auto part = keypointsPoseEstimationIndices[i];
 
@@ -575,7 +575,7 @@ namespace op
                     if (!kvrf.second[1].empty())
                     {
                         const auto& rawFramesFace = kvrf.second[1];
-                        for (auto i = 0; i < keypointsFaceEstimationIndices.size(); i++)
+                        for (std::size_t i = 0; i < keypointsFaceEstimationIndices.size(); i++)
                         {
                             auto part = keypointsFaceEstimationIndices[i];
 
@@ -715,15 +715,15 @@ namespace op
             {
                 auto& person = *p;
 
-                auto nRawFrameTypes = person.frames.begin()->second.size();
+                const std::size_t nRawFrameTypes = person.frames.begin()->second.size();
 
-                for (auto iRawFrameType = 0; iRawFrameType < nRawFrameTypes; ++iRawFrameType)
+                for (std::size_t iRawFrameType = 0; iRawFrameType < nRawFrameTypes; ++iRawFrameType)
                 {
                     std::vector<std::vector<std::vector<KeyFrame>>> keypointTracks;
-                    const auto nKeypoints = person.frames.begin()->second[iRawFrameType].size();
+                    const std::size_t nKeypoints = person.frames.begin()->second[iRawFrameType].size();
 
                     bool validTrack = false;
-                    for (auto iKeypointId = 0; iKeypointId < nKeypoints; ++iKeypointId)
+                    for (std::size_t iKeypointId = 0; iKeypointId < nKeypoints; ++iKeypointId)
                     {
                         std::vector<std::vector<KeyFrame>> keyFrameTracks;
 
@@ -917,7 +917,7 @@ namespace op
 
                         double mseTranslation = 0.0;
                         double mseRotation = 0.0;
-                        int nFrames = 0;
+                        std::size_t nFrames = 0;
                         for (auto i = lastKeyframe + 1; i != itrf; ++i)
                         {
                             cv::Point3d tt
@@ -989,15 +989,15 @@ namespace op
 
             // output JSON string
             std::vector<nlohmann::json> jRoots;
-            int iPerson = 0;
+            std::size_t iPerson = 0;
             while (iPerson < persons.size())
             {
                 jRoots.push_back(nlohmann::json{});
                 nlohmann::json jPersons;
                 std::size_t numKeyFrames = 0;
                 std::vector<PersonInfo*> personsThisSegment;
-                int startFrameNumberSegment = std::numeric_limits<int>::max();
-                int endFrameNumberSegment = 0;
+                std::size_t startFrameNumberSegment = std::numeric_limits<std::size_t>::max();
+                std::size_t endFrameNumberSegment = 0;
                 for (; iPerson < persons.size(); ++iPerson)
                 {
                     auto& pp = persons[iPerson];
@@ -1038,7 +1038,7 @@ namespace op
                             jTracks["type"] = keypointName;
 
                             nlohmann::json jKeypoints;
-                            for (int iKeypoint = 0; iKeypoint < kvt.second.size(); ++iKeypoint)
+                            for (std::size_t iKeypoint = 0; iKeypoint < kvt.second.size(); ++iKeypoint)
                             {
                                 nlohmann::json jKeyFrameTracks;
                                 for (const auto& kft : kvt.second[iKeypoint])
@@ -1160,7 +1160,7 @@ namespace op
                 }
             }
 
-            for (int i = 0; i < jRoots.size(); ++i)
+            for (std::size_t i = 0; i < jRoots.size(); ++i)
             {
                 auto& jRoot = jRoots[i];
                 jRoot["numSegments"] = jRoots.size();

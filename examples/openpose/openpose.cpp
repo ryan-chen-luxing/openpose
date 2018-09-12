@@ -243,6 +243,7 @@ DEFINE_string(udp_port,                 "8051",         "Experimental, not avail
 
 DEFINE_string(youtubeId, "", "video id for youtube");
 DEFINE_bool(visualizeKeyframes, false, "false to generate keyframes, true to visualize keyframes.");
+DEFINE_bool(inputObjectDetection, false, "");
 
 int openPoseDemo()
 {
@@ -274,11 +275,11 @@ int openPoseDemo()
         const auto handNetInputSize = op::flagsToPoint(FLAGS_hand_net_resolution, "368x368 (multiples of 16)");
         
         std::string youtubeId = FLAGS_youtubeId;
-        youtubeId = "b9OlwQEnncs";
-        bool visualizeKeyframes = FLAGS_visualizeKeyframes || false;
-        auto useCamera = youtubeId.empty();
+        //youtubeId = "b9OlwQEnncs";
+        bool visualizeKeyframes = FLAGS_visualizeKeyframes;
+        auto useCamera = youtubeId.empty() && FLAGS_video.empty();
         auto visualizeCompressedPoseTracking = !useCamera && visualizeKeyframes;
-        auto inputObjectDetection = !visualizeCompressedPoseTracking && false;
+        auto inputObjectDetection = !visualizeCompressedPoseTracking && FLAGS_inputObjectDetection;
         auto outputPoseTracking = !visualizeCompressedPoseTracking;
         // producerType
         std::shared_ptr<op::Producer> producerSharedPtr;
@@ -291,7 +292,9 @@ int openPoseDemo()
         }
         else
         {
-            producerSharedPtr = op::flagsToProducer(FLAGS_image_dir, youtubeId + ".mp4", FLAGS_ip_camera, FLAGS_camera,
+            producerSharedPtr = op::flagsToProducer(FLAGS_image_dir,
+                FLAGS_video.empty() ? youtubeId + ".mp4" : FLAGS_video,
+                FLAGS_ip_camera, FLAGS_camera,
                 FLAGS_flir_camera, FLAGS_camera_resolution, FLAGS_camera_fps,
                 FLAGS_camera_parameter_folder, !FLAGS_frame_keep_distortion,
                 (unsigned int)FLAGS_3d_views, FLAGS_flir_camera_index,
