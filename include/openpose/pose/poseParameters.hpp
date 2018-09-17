@@ -14,6 +14,8 @@ namespace op
     const auto POSE_MAX_PEOPLE = 127u;
 
     // Model functions
+    OP_API const std::string& getPoseModelName(const PoseModel poseModel);
+    OP_API const std::vector<std::vector<unsigned int>>& getPoseBodyHierarchy(const PoseModel poseModel);
     OP_API const std::map<unsigned int, std::string>& getPoseBodyPartMapping(const PoseModel poseModel);
     OP_API const std::string& getPoseProtoTxt(const PoseModel poseModel);
     OP_API const std::string& getPoseTrainedModel(const PoseModel poseModel);

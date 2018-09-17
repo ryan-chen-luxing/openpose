@@ -24,65 +24,58 @@ namespace op
             {
                 std::string type;
 
-                struct Keypoints
+                struct Keypoint
                 {
-                    struct Keypoint
+                    struct KeyframeClip
                     {
-
-                        struct KeyframeClip
+                        struct Keyframe
                         {
-                            struct Keyframe
-                            {
-                                std::size_t frameNumber;
-                                float x;
-                                float y;
+                            std::size_t frameNumber;
+                            float x;
+                            float y;
 
-                                Keyframe(std::size_t _frameNumber, float _x, float _y)
-                                    : frameNumber(_frameNumber)
-                                    , x(_x)
-                                    , y(_y)
-                                {
-                                }
-                            };
-                            std::vector<std::shared_ptr<Keyframe>> keyframes;
-
-                            KeyframeClip(const json& j)
+                            Keyframe(std::size_t _frameNumber, float _x, float _y)
+                                : frameNumber(_frameNumber)
+                                , x(_x)
+                                , y(_y)
                             {
-                                for (auto keyframe : j)
-                                {
-                                    keyframes.push_back(std::make_shared<Keyframe>(keyframe["n"], keyframe["x"], keyframe["y"]));
-                                }
                             }
                         };
-                        std::vector<std::shared_ptr<KeyframeClip>> keyframeClips;
+                        std::vector<std::shared_ptr<Keyframe>> keyframes;
 
-                        explicit Keypoint(const json& j)
+                        KeyframeClip(const json& j)
                         {
-                            for (auto keyframeClip : j)
+                            for (auto keyframe : j)
                             {
-                                keyframeClips.push_back(std::make_shared<KeyframeClip>(keyframeClip));
+                                keyframes.push_back(std::make_shared<Keyframe>(keyframe["n"], keyframe["x"], keyframe["y"]));
                             }
                         }
                     };
+                    std::vector<std::shared_ptr<KeyframeClip>> keyframeClips;
 
-                    std::map<std::size_t, std::shared_ptr<Keypoint>> keypoints;
-
-                    explicit Keypoints(const json& j)
+                    explicit Keypoint(const json& j)
                     {
-                        for (std::size_t i = 0; i < j.size(); ++i)
+                        for (auto keyframeClip : j)
                         {
-                            keypoints[i] = std::make_shared<Keypoint>(j[i]);
+                            keyframeClips.push_back(std::make_shared<KeyframeClip>(keyframeClip));
                         }
                     }
                 };
-                Keypoints keypoints;
 
-                explicit Track(const json& j)
-                    : keypoints(j["keypoints"])
+                std::map<std::size_t, std::shared_ptr<Keypoint>> keypoints;
+
+                explicit Track(const std::string& type_, const json& jTrack)
+                    : type{ type_ }
                 {
-                    type = j["type"];
+                    for (auto iKeypoint = jTrack.begin(); iKeypoint != jTrack.end(); ++iKeypoint)
+                    {
+                        std::stringstream ss;
+                        ss << iKeypoint.key();
+                        std::size_t key = 0;
+                        ss >> key;
+                        keypoints[key] = std::make_shared<Keypoint>(iKeypoint.value());
+                    }
                 }
-
             };
             std::vector<std::shared_ptr<Track>> tracks;
 
@@ -109,28 +102,37 @@ namespace op
                 endFrame = j["endFrame"];
                 id = j["id"];
 
-                for (auto track : j["tracks"])
-                {
-                    tracks.push_back(std::make_shared<Track>(track));
-                }
+                auto jTracks = j["tracks"];
 
-                for (auto track : j["faceTranslation"])
+                for (auto iTrack = jTracks.begin(); iTrack != jTracks.end(); ++iTrack)
                 {
-                    faceTranslationTracks.push_back(std::vector<std::shared_ptr<Keyframe3D>>{});
-
-                    for (auto keyframe : track)
+                    if (iTrack.key() == "hr")
                     {
-                        faceTranslationTracks.back().push_back(std::make_shared<Keyframe3D>(keyframe));
+                        for (auto track : iTrack.value())
+                        {
+                            faceRotationTracks.push_back(std::vector<std::shared_ptr<Keyframe3D>>{});
+
+                            for (auto keyframe : track)
+                            {
+                                faceRotationTracks.back().push_back(std::make_shared<Keyframe3D>(keyframe));
+                            }
+                        }
                     }
-                }
-
-                for (auto track : j["faceRotation"])
-                {
-                    faceRotationTracks.push_back(std::vector<std::shared_ptr<Keyframe3D>>{});
-
-                    for (auto keyframe : track)
+                    else if(iTrack.key() == "ht")
                     {
-                        faceRotationTracks.back().push_back(std::make_shared<Keyframe3D>(keyframe));
+                        for (auto track : iTrack.value())
+                        {
+                            faceTranslationTracks.push_back(std::vector<std::shared_ptr<Keyframe3D>>{});
+
+                            for (auto keyframe : track)
+                            {
+                                faceTranslationTracks.back().push_back(std::make_shared<Keyframe3D>(keyframe));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        tracks.push_back(std::make_shared<Track>(iTrack.key(), iTrack.value()));
                     }
                 }
             }

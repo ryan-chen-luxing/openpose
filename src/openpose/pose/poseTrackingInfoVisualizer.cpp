@@ -20,7 +20,7 @@ namespace op
         for (int s = 0; s < numSegments; ++s)
         {
             std::stringstream ss;
-            ss << fileid << "_" << s << ".json";
+            ss << fileid << "_pbp_" << s << ".json";
 
             std::ifstream i(ss.str());
             json j;
@@ -102,7 +102,8 @@ namespace op
         {
             auto frame = outputData.getCvMat();
 
-            typedef std::vector<cv::Point2f> Keypoints;
+            typedef cv::Point2f Keypoint;
+            typedef std::map<std::size_t, Keypoint> Keypoints;
             typedef std::vector<Keypoints> Tracks;
             typedef std::tuple<int, Tracks, cv::Mat, cv::Mat> Person;
             typedef std::vector<Person> Persons;
@@ -116,12 +117,10 @@ namespace op
 
                     for (auto track : person->tracks)
                     {
-                        std::vector<cv::Point2f> keypoints;
+                        Keypoints keypoints;
 
-                        for (auto kvkp : track->keypoints.keypoints)
+                        for (auto kvkp : track->keypoints)
                         {
-                            cv::Point2f keypoint(-1.f, -1.f);
-
                             auto itrKeyframeClips = kvkp.second->keyframeClips.begin();
                             while (itrKeyframeClips != kvkp.second->keyframeClips.end())
                             {
@@ -158,15 +157,16 @@ namespace op
                                     itr != (*itrKeyframeClips)->keyframes.end())
                                 {
                                     auto previousItr = itr - 1;
-                                    keypoint = lerp(
+
+                                    cv::Point2f keypoint = lerp(
                                         cv::Point2f{ (*previousItr)->x, (*previousItr)->y },
                                         cv::Point2f{ (*itr)->x, (*itr)->y },
                                         (*previousItr)->frameNumber,
                                         (*itr)->frameNumber, frameNumber);
+
+                                    keypoints[kvkp.first] = keypoint;
                                 }
                             }
-
-                            keypoints.push_back(keypoint);
                         }
 
                         tracks.push_back(keypoints);
@@ -269,8 +269,8 @@ namespace op
                         int maxY = maxX;
                         for (const auto& keypoint : std::get<1>(person).front())
                         {
-                            const auto x = keypoint.x;
-                            const auto y = keypoint.y;
+                            const auto x = keypoint.second.x;
+                            const auto y = keypoint.second.y;
                             if (x < 0 || y < 0)
                                 continue;
 
@@ -304,13 +304,17 @@ namespace op
                         // Draw lines
                         for (std::size_t iPair = 0; iPair < pairs.size(); iPair += 2)
                         {
-                            std::pair<unsigned int, unsigned int> pair{ pairs[iPair], pairs[iPair + 1] };
+                            std::pair<std::size_t, std::size_t> pair{ pairs[iPair], pairs[iPair + 1] };
 
-                            const auto& part1 = std::get<1>(person).front()[pair.first];
-                            const auto& part2 = std::get<1>(person).front()[pair.second];
+                            const auto i1 = std::get<1>(person).front().find(pair.first);
+                            const auto i2 = std::get<1>(person).front().find(pair.second);
 
-                            if (part1.x > 0 && part1.y > 0 && part2.x > 0 && part2.y > 0)
+                            if (i1 != std::get<1>(person).front().end() &&
+                                i2 != std::get<1>(person).front().end())
                             {
+                                const auto& part1 = i1->second;
+                                const auto& part2 = i2->second;
+
                                 const auto thicknessLineScaled = thicknessLine
                                     * poseScales[pair.second % numberScales];
                                 const auto colorIndex = pair.second * 3; // Before: colorIndex = pair/2*3;
@@ -328,9 +332,11 @@ namespace op
                         // Draw circles
                         for (std::size_t part = 0; part < std::get<1>(person).front().size(); ++part)
                         {
-                            const auto& keypoint = std::get<1>(person).front()[part];
-                            if (keypoint.x > 0 && keypoint.y > 0)
+                            const auto ik = std::get<1>(person).front().find(part);
+                            if (ik != std::get<1>(person).front().end())
                             {
+                                const auto& keypoint = ik->second;
+
                                 const auto radiusScaled = radius * poseScales[part % numberScales];
                                 const auto thicknessCircleScaled = thicknessCircle * poseScales[part % numberScales];
                                 const auto colorIndex = part * 3;
@@ -344,9 +350,11 @@ namespace op
                             }
                         }
 
-                        const auto& origin = std::get<1>(person).front().front();
-                        if (origin.x > 0 && origin.y > 0)
+                        const auto& iOrigin = std::get<1>(person).front().find(0);
+                        if (iOrigin != std::get<1>(person).front().end())
                         {
+                            auto& origin = iOrigin->second;
+
                             const auto fontScale = fastMax(1, fastMin(2, int(round(float(width) / 480))));
                             cv::putText(frameBGR, std::to_string(std::get<0>(person)),
                             { int(round(origin.x)), int(round(origin.y + 10)) },
@@ -368,8 +376,8 @@ namespace op
 
                             cv::projectPoints(nose_end_point3D, rotation, translation, camera_matrix, dist_coeffs, nose_end_point2D);
 
-                            cv::Point2d nosePoint(std::get<1>(person).front()[0].x, std::get<1>(person).front()[0].y);
-                            cv::line(frameBGR, nosePoint, nose_end_point2D[0], cv::Scalar(255, 0, 0), 2);
+                            auto& origin = iOrigin->second;
+                            cv::line(frameBGR, iOrigin->second, nose_end_point2D[0], cv::Scalar(255, 0, 0), 2);
                         }
                     }
                 }

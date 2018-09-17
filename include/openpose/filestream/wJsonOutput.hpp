@@ -7,6 +7,7 @@
 #include <openpose/pose/enumClasses.hpp>
 #include <openpose/utilities/fastMath.hpp>
 #include <openpose/utilities/keypoint.hpp>
+#include <openpose/pose/poseParameters.hpp>
 #include <opencv2/opencv.hpp>
 #include <map>
 #include <math.h>
@@ -28,10 +29,10 @@ namespace op
             , mVideoReader{ videoReader }
             , mJsonPath{ jsonPath }
         {
-            mVideoWidth = mVideoReader->get(CV_CAP_PROP_FRAME_WIDTH);
-            mVideoHeight = mVideoReader->get(CV_CAP_PROP_FRAME_HEIGHT);
-            mVideoFPS = mVideoReader->get(CV_CAP_PROP_FPS);
-            mVideoNumFrames = mVideoReader->get(CV_CAP_PROP_FRAME_COUNT);
+            mVideoWidth = std::size_t(mVideoReader->get(CV_CAP_PROP_FRAME_WIDTH));
+            mVideoHeight = std::size_t(mVideoReader->get(CV_CAP_PROP_FRAME_HEIGHT));
+            mVideoFPS = std::size_t(mVideoReader->get(CV_CAP_PROP_FPS));
+            mVideoNumFrames = std::size_t(mVideoReader->get(CV_CAP_PROP_FRAME_COUNT));
         }
 
         ~WJsonOutput()
@@ -84,16 +85,12 @@ namespace op
         }
 
     private:
-        std::shared_ptr<op::VideoReader> mVideoReader;
-        std::string mJsonPath;
-        PoseModel mPoseModel;
-
         struct FrameInfo
         {
-            int frameNumber;
+            std::size_t frameNumber;
             std::vector<Array<float>> keypoints;
 
-            FrameInfo(int frameNumber_, const std::vector<Array<float>>& keypoints_)
+            FrameInfo(std::size_t frameNumber_, const std::vector<Array<float>>& keypoints_)
                 : frameNumber{ frameNumber_ }
                 , keypoints{ keypoints_ }
             {}
@@ -101,11 +98,11 @@ namespace op
 
         struct KeyFrame
         {
-            int frameNumber;
+            std::size_t frameNumber;
             float x;
             float y;
 
-            KeyFrame(int frameNumber_, float x_, float y_)
+            KeyFrame(std::size_t frameNumber_, float x_, float y_)
                 : frameNumber{ frameNumber_ }
                 , x{ x_ }
                 , y{ y_ }
@@ -114,11 +111,11 @@ namespace op
 
         struct TransformRawFrame
         {
-            int frameNumber;
+            std::size_t frameNumber;
             cv::Mat_<double> translation;
             cv::Mat_<double> rotation;
 
-            TransformRawFrame(int frameNumber_,
+            TransformRawFrame(std::size_t frameNumber_,
                 const cv::Mat& translation_,
                 const cv::Mat& rotation_)
                 : frameNumber{ frameNumber_ }
@@ -129,10 +126,10 @@ namespace op
 
         struct KeyFrame3D
         {
-            int frameNumber;
+            std::size_t frameNumber;
             cv::Point3d value;
 
-            KeyFrame3D(int frameNumber_,
+            KeyFrame3D(std::size_t frameNumber_,
                 const cv::Point3d& value_)
                 : frameNumber{ frameNumber_ }
                 , value{ value_ }
@@ -179,10 +176,14 @@ namespace op
 
         std::vector<FrameInfo> mRawFrames;
 
-        double mVideoWidth;
-        double mVideoHeight;
-        double mVideoFPS;
-        double mVideoNumFrames;
+        std::size_t mVideoWidth;
+        std::size_t mVideoHeight;
+        std::size_t mVideoFPS;
+        std::size_t mVideoNumFrames;
+
+        std::shared_ptr<op::VideoReader> mVideoReader;
+        std::string mJsonPath;
+        PoseModel mPoseModel;
 
         DELETE_COPY(WJsonOutput);
 
@@ -256,12 +257,25 @@ namespace op
             return std::tuple<float, float, float, float> {left, top, right, bottom};
         }
 
+        template<typename T>
+        std::string toString(const T& value)
+        {
+            std::stringstream ss;
+            ss << value;
+            return ss.str();
+        }
+
         //void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 4.f,
         //    double mseHeadTranslationThreshold = 0.35, double mseHeadRotationThreshold = 0.03,
         //    int indexerInterval = 200);
-        void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 32.f,
-            double mseHeadTranslationThreshold = 0.6, double mseHeadRotationThreshold = 0.06,
-            int indexerInterval = 30, int maxFramesPerSegment = 10000)
+        void postProcess(float confidenceThreshold = 0.1f,
+            float mseLerpTheshold = 48.f,
+            double mseHeadTranslationThreshold = 0.6,
+            double mseHeadRotationThreshold = 0.06,
+            std::size_t maxFramesPerSegment = 0,
+            bool personByPerson = true,
+            bool frameByFrame = true,
+            bool outputMetafile = true)
         {
             // processing raw frames into skeletons
             std::vector<PersonInfo> personsRaw;
@@ -641,91 +655,6 @@ namespace op
                 }
             }
 
-            // Moving average based transform filtering
-            //for (auto& p : persons)
-            //{
-            //    auto& person = *p;
-
-            //    const int windowSize = 30;
-            //    const unsigned int stepSize = 1;
-            //    const float deviationThreshold = 1;
-            //    for (int frameNumber = person.startFrameNumber; frameNumber <= person.endFrameNumber; frameNumber += stepSize)
-            //    {
-            //        std::vector<const TransformFrame*> samples;
-            //        const TransformFrame* currentTransform = nullptr;
-            //        for (const auto& hrf : person.headOrientationTrack)
-            //        {
-            //            if (hrf.frameNumber < frameNumber - windowSize ||
-            //                hrf.frameNumber > frameNumber + windowSize)
-            //            {
-            //                continue;
-            //            }
-            //            else if (hrf.frameNumber == frameNumber)
-            //            {
-            //                currentTransform = &hrf;
-            //            }
-            //            samples.push_back(&hrf);
-            //        }
-
-            //        if (!currentTransform)
-            //            continue;
-
-            //        auto translationGood = false;
-            //        auto rotationGood = false;
-            //        cv::Point3f mean{};
-            //        float variance{};
-
-            //        // translation
-            //        for (const auto& sample : samples)
-            //        {
-            //            mean += sample->translation;
-            //        }
-            //        mean /= float(samples.size());
-
-            //        for (const auto& sample : samples)
-            //        {
-            //            variance += squareLengthPoint3(sample->translation - mean);
-            //        }
-            //        variance /= float(samples.size());
-
-            //        auto deviation = squareLengthPoint3(currentTransform->translation - mean);
-            //        if (deviation <= variance * deviationThreshold)
-            //        {
-            //            translationGood = true;
-            //        }
-
-            //        // rotation
-            //        mean = cv::Point3f{};
-            //        variance = 0.f;
-            //        for (const auto& sample : samples)
-            //        {
-            //            mean += sample->rotation;
-            //        }
-            //        mean /= float(samples.size());
-
-            //        for (const auto& sample : samples)
-            //        {
-            //            variance += squareLengthPoint3(sample->rotation - mean);
-            //        }
-            //        variance /= float(samples.size());
-
-            //        deviation = squareLengthPoint3(currentTransform->rotation - mean);
-            //        if (deviation <= variance * deviationThreshold)
-            //        {
-            //            rotationGood = true;
-            //        }
-
-            //        if (translationGood && rotationGood)
-            //        {
-            //            person.headOrientationTrack.push_back(*currentTransform);
-            //        }
-            //        else
-            //        {
-            //            auto droppedFrameNumber = frameNumber;
-            //        }
-            //    }
-            //}
-
             // processing raw frames into key frames
             for (auto& p : persons)
             {
@@ -768,7 +697,9 @@ namespace op
                                     keyFrameTracks.back().push_back(KeyFrame(frameNumber, rawFrame.x, rawFrame.y));
                                     lastKeyframeNumber = frameNumber;
                                 }
-                                else if (lastFrameNumber != frameNumber - 1)
+                                else if (lastFrameNumber != frameNumber - 1 ||
+                                    // this will make sure keyframes will not span across segments
+                                    (!personByPerson && maxFramesPerSegment > 0 && (lastFrameNumber + 1) % maxFramesPerSegment == 0))
                                 {
                                     // detect discontinuity on frames
                                     // push last frame
@@ -884,7 +815,9 @@ namespace op
                         person.headRotationTracks.back().push_back(KeyFrame3D(frameNumber, rotation));
                         lastKeyframe = itrf;
                     }
-                    else if (lastFrame->frameNumber != frameNumber - 1)
+                    else if (lastFrame->frameNumber != frameNumber - 1 ||
+                        // this will make sure keyframes will not span across segments
+                        (!personByPerson && maxFramesPerSegment > 0 && (lastFrame->frameNumber + 1) % maxFramesPerSegment == 0))
                     {
                         // detect discontinuity on frames
                         // push last frame
@@ -1004,36 +937,322 @@ namespace op
             }
 
             // output JSON string
-            std::vector<nlohmann::json> jRoots;
-            std::size_t iPerson = 0;
-            while (iPerson < persons.size())
+            if (personByPerson)
             {
-                jRoots.push_back(nlohmann::json{});
-                nlohmann::json jPersons;
-                std::size_t numKeyFrames = 0;
-                std::vector<PersonInfo*> personsThisSegment;
-                std::size_t startFrameNumberSegment = std::numeric_limits<std::size_t>::max();
-                std::size_t endFrameNumberSegment = 0;
+                std::vector<nlohmann::json> jRoots;
+                std::size_t iPerson = 0;
+                while (iPerson < persons.size())
+                {
+                    jRoots.push_back(nlohmann::json{});
+                    nlohmann::json jPersons;
+                    std::size_t numKeyFrames = 0;
+                    std::vector<PersonInfo*> personsThisSegment;
+                    std::size_t startFrameNumberSegment = std::numeric_limits<std::size_t>::max();
+                    std::size_t endFrameNumberSegment = 0;
+                    for (; iPerson < persons.size(); ++iPerson)
+                    {
+                        auto& pp = persons[iPerson];
+                        auto& p = *pp;
+
+                        nlohmann::json jPerson;
+                        jPerson["id"] = iPerson;
+                        jPerson["startFrame"] = p.startFrameNumber;
+                        jPerson["endFrame"] = p.endFrameNumber;
+
+                        startFrameNumberSegment = std::min(startFrameNumberSegment, p.startFrameNumber);
+                        endFrameNumberSegment = std::max(endFrameNumberSegment, p.endFrameNumber);
+                        for (const auto& kvt : p.keypointTracks)
+                        {
+                            if (!kvt.second.empty())
+                            {
+                                //nlohmann::json jTracks;
+
+                                std::string keypointName;
+                                switch (kvt.first)
+                                {
+                                case 0:
+                                    keypointName = "pose";
+                                    break;
+                                case 1:
+                                    keypointName = "face";
+                                    break;
+                                case 2:
+                                    keypointName = "handL";
+                                    break;
+                                case 3:
+                                    keypointName = "handR";
+                                    break;
+                                default:
+                                    break;
+                                }
+
+                                //jTracks["type"] = keypointName;
+
+                                nlohmann::json jKeypoints;
+                                for (std::size_t iKeypoint = 0; iKeypoint < kvt.second.size(); ++iKeypoint)
+                                {
+                                    nlohmann::json jKeyFrameTracks;
+                                    for (const auto& kft : kvt.second[iKeypoint])
+                                    {
+                                        if (kft.size() > 1)
+                                        {
+                                            nlohmann::json jKeyFrames;
+                                            for (const auto& kf : kft)
+                                            {
+                                                nlohmann::json keyFrame;
+                                                keyFrame["n"] = kf.frameNumber;
+                                                keyFrame["x"] = int(round(kf.x));
+                                                keyFrame["y"] = int(round(kf.y));
+                                                jKeyFrames.push_back(keyFrame);
+                                            }
+                                            jKeyFrameTracks.push_back(jKeyFrames);
+                                        }
+                                    }
+
+                                    if (!jKeyFrameTracks.empty())
+                                    {
+                                        jKeypoints[toString(iKeypoint)] = jKeyFrameTracks;
+                                    }
+                                }
+
+                                //jTracks["keypoints"] = jKeypoints;
+                                //jPerson["tracks"].push_back(jTracks);
+                                jPerson["tracks"][keypointName] = jKeypoints;
+                            }
+                        }
+
+                        nlohmann::json jFaceTranslationTracks;
+                        for (const auto& htt : p.headTranslationTracks)
+                        {
+                            if (!htt.empty())
+                            {
+                                nlohmann::json jTrack;
+                                for (const auto& htkf : htt)
+                                {
+                                    nlohmann::json jKeyframe3D;
+                                    jKeyframe3D["n"] = htkf.frameNumber;
+                                    std::vector<int> value{
+                                        int(round(htkf.value.x * 1000)),
+                                        int(round(htkf.value.y * 1000)),
+                                        int(round(htkf.value.z * 1000))
+                                    };
+                                    jKeyframe3D["v"] = value;
+                                    jTrack.push_back(jKeyframe3D);
+                                }
+
+                                jFaceTranslationTracks.push_back(jTrack);
+                            }
+                        }
+                        //jPerson["faceTranslation"] = jFaceTranslationTracks;
+                        if (!jFaceTranslationTracks.empty())
+                        {
+                            jPerson["tracks"]["ht"] = jFaceTranslationTracks;
+                        }
+
+                        nlohmann::json jFaceRotationTracks;
+                        for (const auto& hrt : p.headRotationTracks)
+                        {
+                            if (!hrt.empty())
+                            {
+                                nlohmann::json jTrack;
+                                for (const auto& hrkf : hrt)
+                                {
+                                    nlohmann::json jKeyframe3D;
+                                    jKeyframe3D["n"] = hrkf.frameNumber;
+                                    std::vector<int> value{
+                                        int(round(hrkf.value.x * 1000)),
+                                        int(round(hrkf.value.y * 1000)),
+                                        int(round(hrkf.value.z * 1000))
+                                    };
+                                    jKeyframe3D["v"] = value;
+                                    jTrack.push_back(jKeyframe3D);
+                                }
+
+                                jFaceRotationTracks.push_back(jTrack);
+                            }
+                        }
+                        //jPerson["faceRotation"] = jFaceRotationTracks;
+                        if (!jFaceRotationTracks.empty())
+                        {
+                            jPerson["tracks"]["hr"] = jFaceRotationTracks;
+                        }
+
+                        jPersons.push_back(jPerson);
+
+                        personsThisSegment.push_back(pp);
+
+                        numKeyFrames += p.numKeyFrames;
+
+                        if ((maxFramesPerSegment != 0 && numKeyFrames >= maxFramesPerSegment) ||
+                            iPerson >= persons.size() - 1)
+                        {
+                            jRoots.back()["persons"] = jPersons;
+
+                            ++iPerson;
+                            break;
+                        }
+                    }
+                }
+
+                for (std::size_t i = 0; i < jRoots.size(); ++i)
+                {
+                    auto& jRoot = jRoots[i];
+                    jRoot["numSegments"] = jRoots.size();
+                    jRoot["segmentIndex"] = i;
+                    std::stringstream ss;
+                    ss << this->mJsonPath << "_pbp_" << i;
+                    std::ofstream ofile(ss.str() + ".json");
+                    ofile << jRoot;
+                    ofile.close();
+#ifdef _WIN32
+                    std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
+                    system(command.c_str());
+#endif
+                }
+            }
+            
+            if (frameByFrame)
+            {
+                std::vector<nlohmann::json> jRoots;
+                struct KeyFrameFlat
+                {
+                    std::size_t frameNumber;
+                    std::size_t personId;
+                    std::size_t keypointId;
+                    bool lastOne;
+                    float x;
+                    float y;
+
+                    KeyFrameFlat(std::size_t frameNumber_,
+                        std::size_t personId_,
+                        std::size_t keypointId_,
+                        bool lastOne_,
+                        float x_, float y_)
+                        : frameNumber{ frameNumber_ }
+                        , personId{ personId_ }
+                        , keypointId{ keypointId_ }
+                        , lastOne{ lastOne_ }
+                        , x{ x_ }
+                        , y{ y_ }
+                    {}
+                };
+
+                struct KeyFrame3DFlat
+                {
+                    std::size_t frameNumber;
+                    std::size_t personId;
+                    bool lastOne;
+                    cv::Point3d value;
+
+                    KeyFrame3DFlat(std::size_t frameNumber_,
+                        std::size_t personId_,
+                        bool lastOne_,
+                        const cv::Point3d& value_)
+                        : frameNumber{ frameNumber_ }
+                        , personId{ personId_ }
+                        , lastOne{ lastOne_ }
+                        , value{ value_ }
+                    {}
+                };
+
+                // frameNumber->keyframe type->person->keyframes
+                std::map<std::size_t, std::map<std::size_t, std::map<std::size_t, std::vector<KeyFrameFlat>>>> keyframesFlat;
+                std::map<std::size_t, std::map<std::size_t, std::map<std::size_t, std::vector<KeyFrame3DFlat>>>> keyframes3DFlat;
+                
+                std::size_t iPerson = 0;
                 for (; iPerson < persons.size(); ++iPerson)
                 {
                     auto& pp = persons[iPerson];
-                    auto& p = *pp;
+                    auto& person = *pp;
 
-                    nlohmann::json jPerson;
-                    jPerson["id"] = iPerson;
-                    jPerson["startFrame"] = p.startFrameNumber;
-                    jPerson["endFrame"] = p.endFrameNumber;
-
-                    startFrameNumberSegment = std::min(startFrameNumberSegment, p.startFrameNumber);
-                    endFrameNumberSegment = std::max(endFrameNumberSegment, p.endFrameNumber);
-                    for (const auto& kvt : p.keypointTracks)
+                    for (auto kvt : person.keypointTracks)
                     {
-                        if (!kvt.second.empty())
+                        auto poseType = kvt.first;
+                        
+                        for (std::size_t iKeypoint = 0; iKeypoint < kvt.second.size(); ++iKeypoint)
                         {
-                            nlohmann::json jTracks;
+                            auto& keypoint = kvt.second[iKeypoint];
+                            for (auto& keypointTrack : keypoint)
+                            {
+                                for (std::size_t iKeyFrame = 0; iKeyFrame < keypointTrack.size(); ++iKeyFrame)
+                                {
+                                    auto& keyframe = keypointTrack[iKeyFrame];
+                                    keyframesFlat[keyframe.frameNumber][poseType][iPerson].push_back(
+                                        KeyFrameFlat(keyframe.frameNumber, iPerson, iKeypoint,
+                                            iKeyFrame == keypointTrack.size() - 1, keyframe.x, keyframe.y));
+                                }
+                            }
+                        }
+                    }
+
+                    for (auto& track : person.headTranslationTracks)
+                    {
+                        for (std::size_t iKeyFrame = 0; iKeyFrame < track.size(); ++iKeyFrame)
+                        {
+                            auto& keyframe = track[iKeyFrame];
+                            keyframes3DFlat[keyframe.frameNumber][0][iPerson].push_back(
+                                KeyFrame3DFlat(keyframe.frameNumber, iPerson,
+                                    iKeyFrame == track.size() - 1, keyframe.value));
+                        }
+                    }
+
+                    for (auto& track : person.headRotationTracks)
+                    {
+                        for (std::size_t iKeyFrame = 0; iKeyFrame < track.size(); ++iKeyFrame)
+                        {
+                            auto& keyframe = track[iKeyFrame];
+                            keyframes3DFlat[keyframe.frameNumber][1][iPerson].push_back(
+                                KeyFrame3DFlat(keyframe.frameNumber, iPerson,
+                                    iKeyFrame == track.size() - 1, keyframe.value));
+                        }
+                    }
+                }
+
+                for (std::size_t f = 0; f < mVideoNumFrames; ++f)
+                {
+                    if (f == 0 || (maxFramesPerSegment > 0 && f % maxFramesPerSegment == 0))
+                    {
+                        jRoots.push_back(nlohmann::json{});
+                    }
+
+                    nlohmann::json jFrame;
+
+                    for (auto kv : keyframesFlat[f])
+                    {
+                        nlohmann::json jKeyframes;
+                        auto poseType = kv.first;
+
+                        for (auto& kvp : kv.second)
+                        {
+                            nlohmann::json jPerson;
+                            auto personId = kvp.first;
+
+                            for (auto& keyframe : kvp.second)
+                            {
+                                nlohmann::json jKeyframe;
+
+                                //jKeyframe["n"] = keyframe.frameNumber;
+                                //jKeyframe["p"] = keyframe.personId;
+                                jKeyframe["k"] = keyframe.keypointId;
+                                jKeyframe["l"] = int(keyframe.lastOne);
+                                jKeyframe["x"] = int(round(keyframe.x));
+                                jKeyframe["y"] = int(round(keyframe.y));
+
+                                jPerson.push_back(jKeyframe);
+                            }
+
+                            if (!jPerson.empty())
+                            {
+                                jKeyframes[toString(personId)] = jPerson;
+                            }
+                        }
+
+                        if (!jKeyframes.empty())
+                        {
+                            //nlohmann::json jPose;
 
                             std::string keypointName;
-                            switch (kvt.first)
+                            switch (poseType)
                             {
                             case 0:
                                 keypointName = "pose";
@@ -1051,145 +1270,119 @@ namespace op
                                 break;
                             }
 
-                            jTracks["type"] = keypointName;
-
-                            nlohmann::json jKeypoints;
-                            for (std::size_t iKeypoint = 0; iKeypoint < kvt.second.size(); ++iKeypoint)
-                            {
-                                nlohmann::json jKeyFrameTracks;
-                                for (const auto& kft : kvt.second[iKeypoint])
-                                {
-                                    if (kft.size() > 1)
-                                    {
-                                        nlohmann::json jKeyFrames;
-                                        for (const auto& kf : kft)
-                                        {
-                                            nlohmann::json keyFrame;
-                                            keyFrame["n"] = kf.frameNumber;
-                                            keyFrame["x"] = int(round(kf.x));
-                                            keyFrame["y"] = int(round(kf.y));
-                                            jKeyFrames.push_back(keyFrame);
-                                        }
-                                        jKeyFrameTracks.push_back(jKeyFrames);
-                                    }
-                                }
-                                jKeypoints[iKeypoint] = jKeyFrameTracks;
-                            }
-
-                            jTracks["keypoints"] = jKeypoints;
-                            jPerson["tracks"].push_back(jTracks);
+                            //jPose["type"] = keypointName;
+                            //jPose["keyframes"] = jKeyframes;
+                            //jFrame.push_back(jPose);
+                            jFrame[keypointName] = jKeyframes;
                         }
                     }
 
-                    nlohmann::json jFaceTranslationTracks;
-                    for (const auto& htt : p.headTranslationTracks)
+                    for (auto kv : keyframes3DFlat[f])
                     {
-                        if (!htt.empty())
+                        nlohmann::json jKeyframes;
+                        auto poseType = kv.first;
+
+                        for (auto& kvp : kv.second)
                         {
-                            nlohmann::json jTrack;
-                            for (const auto& htkf : htt)
+                            nlohmann::json jPerson;
+                            auto personId = kvp.first;
+
+                            for (auto& keyframe : kvp.second)
                             {
-                                nlohmann::json jKeyframe3D;
-                                jKeyframe3D["n"] = htkf.frameNumber;
+                                nlohmann::json jKeyframe;
+
+                                //jKeyframe["n"] = keyframe.frameNumber;
+                                //jKeyframe["p"] = keyframe.personId;
+                                jKeyframe["l"] = int(keyframe.lastOne);
                                 std::vector<int> value{
-                                    int(round(htkf.value.x * 1000)),
-                                    int(round(htkf.value.y * 1000)),
-                                    int(round(htkf.value.z * 1000))
+                                    int(round(keyframe.value.x * 1000)),
+                                    int(round(keyframe.value.y * 1000)),
+                                    int(round(keyframe.value.z * 1000))
                                 };
-                                jKeyframe3D["v"] = value;
-                                jTrack.push_back(jKeyframe3D);
+                                jKeyframe["v"] = value;
+
+                                jPerson.push_back(jKeyframe);
                             }
 
-                            jFaceTranslationTracks.push_back(jTrack);
+                            if (!jPerson.empty())
+                            {
+                                jKeyframes[toString(personId)] = jPerson;
+                            }
                         }
-                    }
-                    jPerson["faceTranslation"] = jFaceTranslationTracks;
 
-                    nlohmann::json jFaceRotationTracks;
-                    for (const auto& hrt : p.headRotationTracks)
-                    {
-                        if (!hrt.empty())
+                        if (!jKeyframes.empty())
                         {
-                            nlohmann::json jTrack;
-                            for (const auto& hrkf : hrt)
+                            //nlohmann::json jPose;
+
+                            std::string keypointName;
+                            switch (poseType)
                             {
-                                nlohmann::json jKeyframe3D;
-                                jKeyframe3D["n"] = hrkf.frameNumber;
-                                std::vector<int> value{
-                                    int(round(hrkf.value.x * 1000)),
-                                    int(round(hrkf.value.y * 1000)),
-                                    int(round(hrkf.value.z * 1000))
-                                };
-                                jKeyframe3D["v"] = value;
-                                jTrack.push_back(jKeyframe3D);
+                            case 0:
+                                keypointName = "ht";
+                                break;
+                            case 1:
+                                keypointName = "hr";
+                                break;
+                            default:
+                                break;
                             }
 
-                            jFaceRotationTracks.push_back(jTrack);
+                            //jPose["type"] = keypointName;
+                            //jPose["keyframes"] = jKeyframes;
+                            //jFrame.push_back(jPose);
+
+                            jFrame[keypointName] = jKeyframes;
                         }
                     }
 
-                    jPerson["faceRotation"] = jFaceRotationTracks;
-
-                    jPersons.push_back(jPerson);
-
-                    personsThisSegment.push_back(pp);
-
-                    numKeyFrames += p.numKeyFrames;
-
-                    if (numKeyFrames >= maxFramesPerSegment || iPerson >= persons.size() - 1)
+                    if (!jFrame.empty())
                     {
-                        jRoots.back()["persons"] = jPersons;
-
-                        //int numIntervals = int(ceil(float(endFrameNumberSegment - startFrameNumberSegment + 1) / indexerInterval));
-                        //nlohmann::json jIndexer;
-                        //for (auto i = 0; i < numIntervals; ++i)
-                        //{
-                        //    nlohmann::json jInterval;
-                        //    int startFrameNumber = i * indexerInterval + startFrameNumberSegment;
-                        //    int endFrameNumber = std::min(startFrameNumber + indexerInterval, int(mVideoNumFrames));
-
-                        //    nlohmann::json jPersonsInterval;
-                        //    for (int j = 0; j < personsThisSegment.size(); ++j)
-                        //    {
-                        //        auto& pp = personsThisSegment[j];
-                        //        auto& p = *pp;
-
-                        //        if ((p.startFrameNumber >= startFrameNumber && p.startFrameNumber <= endFrameNumber) ||
-                        //            (p.endFrameNumber >= startFrameNumber && p.endFrameNumber <= endFrameNumber) ||
-                        //            (p.startFrameNumber <= startFrameNumber && p.endFrameNumber >= endFrameNumber))
-                        //        {
-                        //            jPersonsInterval.push_back(j);
-                        //        }
-                        //    }
-                        //    jInterval["start"] = startFrameNumber;
-                        //    jInterval["end"] = endFrameNumber;
-                        //    jInterval["persons"] = jPersonsInterval;
-
-                        //    jIndexer.push_back(jInterval);
-                        //}
-                        //jRoots.back()["indexer"] = jIndexer;
-                        //jRoots.back()["indexerInterval"] = indexerInterval;
-
-                        ++iPerson;
-                        break;
+                        jRoots.back()["frames"][toString(f)] = jFrame;
                     }
+                }
+
+                for (std::size_t i = 0; i < jRoots.size(); ++i)
+                {
+                    auto& jRoot = jRoots[i];
+                    jRoot["numSegments"] = jRoots.size();
+                    jRoot["segmentIndex"] = i;
+                    std::stringstream ss;
+                    ss << this->mJsonPath << "_fbf_" << i;
+                    std::ofstream ofile(ss.str() + ".json");
+                    ofile << jRoot;
+                    ofile.close();
+#ifdef _WIN32
+                    std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
+                    system(command.c_str());
+#endif
                 }
             }
 
-            for (std::size_t i = 0; i < jRoots.size(); ++i)
+            if (outputMetafile)
             {
-                auto& jRoot = jRoots[i];
-                jRoot["numSegments"] = jRoots.size();
-                jRoot["segmentIndex"] = i;
-                std::stringstream ss;
-                ss << this->mJsonPath << "_" << i;
-                std::ofstream ofile(ss.str() + ".json");
-                ofile << jRoot;
+                // output video meta info
+                nlohmann::json jMeta;
+                jMeta["videoWidth"] = mVideoWidth;
+                jMeta["videoHeight"] = mVideoHeight;
+                jMeta["videoFPS"] = mVideoFPS;
+                jMeta["videoNumFrames"] = mVideoNumFrames;
+                jMeta["poseModel"] = getPoseModelName(mPoseModel);
+                auto poseBodyPartMapping = getPoseBodyPartMapping(mPoseModel);
+                for (auto kv : poseBodyPartMapping)
+                {
+                    jMeta["keypoints"][toString(kv.first)] = kv.second;
+                }
+
+                auto poseBodyHierarchy = getPoseBodyHierarchy(mPoseModel);
+                for (const auto& v : poseBodyHierarchy)
+                {
+                    std::vector<unsigned int> temp(v.begin() + 1, v.end());
+                    jMeta["hierarchy"][toString(v.front())] = temp;
+                }
+
+                std::ofstream ofile(this->mJsonPath + "_meta.json");
+                ofile << jMeta;
                 ofile.close();
-#ifdef _WIN32
-                std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
-                system(command.c_str());
-#endif
             }
         }
     };

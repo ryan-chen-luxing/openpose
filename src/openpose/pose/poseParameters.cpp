@@ -3,6 +3,22 @@
 
 namespace op
 {
+    const std::array<std::string, (int)PoseModel::Size> POSE_MODEL_NAMES{
+        "body_25",
+        "coco",
+        "mpi",
+        "mpi",
+        "body_19",
+        "body_19_x2",
+        "body_59",
+        "body_19n",
+        "body_25e",
+        "body_19_25",
+        "body_65",
+        "car_12",
+        "body_25d",
+    };
+
     // Body parts mapping
     const std::map<unsigned int, std::string> POSE_BODY_25_BODY_PARTS {
         {0,  "Nose"},
@@ -434,6 +450,67 @@ namespace op
         // 0.2f,       0.4f,       0.4f,       0.4f,       0.4f,       0.4f // Matlab version
     };
 
+
+    const std::array<std::vector<std::vector<unsigned int>>, (int)PoseModel::Size> POSE_BODY_HIERARCHY{
+        // BODY_25
+        std::vector<std::vector<unsigned int>>
+        {
+            { 8, 1, 9, 12 },
+            { 1, 0, 2, 5 },
+            { 0, 15, 16, 17, 18 },
+            { 2, 3 },
+            { 3, 4 },
+            { 5, 6 },
+            { 6, 7 },
+            { 9, 10 },
+            { 10, 11 },
+            { 11, 22, 24 },
+            { 22, 23 },
+            { 12, 13 },
+            { 13, 14 },
+            { 14, 21, 19 },
+            { 19, 20 },
+        },
+        // COCO
+        std::vector<std::vector<unsigned int>>
+        {
+            { 1, 0, 2, 5, 8, 11 },
+            { 0, 14, 15, 16, 17 },
+            { 2, 3 },
+            { 3, 4 },
+            { 5, 6 },
+            { 6, 7 },
+            { 8, 9 },
+            { 9, 10 },
+            { 11, 12 },
+            { 12, 13 },
+        },
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+        std::vector<std::vector<unsigned int>> {},
+    };
+
+    const std::string& getPoseModelName(const PoseModel poseModel)
+    {
+        try
+        {
+            return POSE_MODEL_NAMES.at((int)poseModel);
+        }
+        catch (const std::exception& e)
+        {
+            error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+            return POSE_MODEL_NAMES[(int)poseModel];
+        }
+    }
+
     const std::map<unsigned int, std::string>& getPoseBodyPartMapping(const PoseModel poseModel)
     {
         try
@@ -496,6 +573,19 @@ namespace op
         {
             error(e.what(), __LINE__, __FUNCTION__, __FILE__);
             return POSE_BODY_PART_PAIRS[(int)poseModel];
+        }
+    }
+
+    const std::vector<std::vector<unsigned int>>& getPoseBodyHierarchy(const PoseModel poseModel)
+    {
+        try
+        {
+            return POSE_BODY_HIERARCHY.at((int)poseModel);
+        }
+        catch (const std::exception& e)
+        {
+            error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+            return POSE_BODY_HIERARCHY[(int)poseModel];
         }
     }
 
