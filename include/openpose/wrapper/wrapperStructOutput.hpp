@@ -64,6 +64,11 @@ namespace op
         std::string writeJson;
 
         /**
+        * The json file will be split if the number of frames is greater than this value
+        */
+        std::size_t maxFramesPerSegment;
+
+        /**
          * Pose (x, y, score) locations saving folder location in JSON COCO validation format.
          * If it is empty (default), it is disabled.
          */
@@ -146,7 +151,8 @@ namespace op
                             const bool fullScreen = false, const std::string& writeKeypoint = "",
                             const DataFormat writeKeypointFormat = DataFormat::Xml,
                             const std::shared_ptr<op::VideoReader> videoReader = nullptr,
-                            const std::string& writeJson = "", const std::string& writeCocoJson = "",
+                            const std::string& writeJson = "", std::size_t maxFramesPerSegment = 0,
+                            const std::string& writeCocoJson = "",
                             const std::string& writeCocoFootJson = "", const std::string& writeImages = "",
                             const std::string& writeImagesFormat = "", const std::string& writeVideo = "",
                             const double writeVideoFps = 30., const std::string& writeHeatMaps = "",

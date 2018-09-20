@@ -244,6 +244,7 @@ DEFINE_string(udp_port,                 "8051",         "Experimental, not avail
 DEFINE_string(youtubeId, "", "video id for youtube");
 DEFINE_bool(visualizeKeyframes, false, "false to generate keyframes, true to visualize keyframes.");
 DEFINE_bool(inputObjectDetection, false, "");
+DEFINE_int32(maxFramesPerSegment, 0, "used to split the json file if the frame number is greater than this value");
 
 int openPoseDemo()
 {
@@ -356,7 +357,8 @@ int openPoseDemo()
         {
             wrapperStructOutput = std::make_shared<op::WrapperStructOutput>(
                 op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
-                FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), nullptr, FLAGS_write_json,
+                FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), nullptr,
+                FLAGS_write_json, FLAGS_maxFramesPerSegment,
                 FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
                 FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
                 FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port);
@@ -366,7 +368,8 @@ int openPoseDemo()
             auto videoReader = std::dynamic_pointer_cast<op::VideoReader>(producerSharedPtr);
             wrapperStructOutput = std::make_shared<op::WrapperStructOutput>(
                 op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
-                FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), videoReader, outputPoseTracking ? youtubeId : "",
+                FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), videoReader,
+                outputPoseTracking ? youtubeId : "", FLAGS_maxFramesPerSegment,
                 FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
                 FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
                 FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port);

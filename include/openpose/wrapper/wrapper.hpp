@@ -931,7 +931,8 @@ namespace op
                 //mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
 
                 mOutputWs.emplace_back(std::make_shared<WJsonOutput<TDatumsSP>>(
-                    wrapperStructPose.poseModel, wrapperStructOutput.videoReader, wrapperStructOutput.writeJson));
+                    wrapperStructPose.poseModel, wrapperStructOutput.videoReader,
+                    wrapperStructOutput.writeJson, wrapperStructOutput.maxFramesPerSegment));
             }
             // Write people pose data on disk (COCO validation json format)
             if (!wrapperStructOutput.writeCocoJson.empty())

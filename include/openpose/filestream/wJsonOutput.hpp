@@ -24,10 +24,14 @@ namespace op
     class OP_API WJsonOutput : public WorkerConsumer<TDatums>
     {
     public:
-        explicit WJsonOutput(PoseModel poseModel, std::shared_ptr<op::VideoReader> videoReader, const std::string& jsonPath)
+        explicit WJsonOutput(PoseModel poseModel,
+            std::shared_ptr<op::VideoReader> videoReader,
+            const std::string& jsonPath,
+            std::size_t maxFramesPerSegment)
             : mPoseModel{ poseModel }
             , mVideoReader{ videoReader }
             , mJsonPath{ jsonPath }
+            , mMaxFramesPerSegment{ maxFramesPerSegment }
         {
             mVideoWidth = std::size_t(mVideoReader->get(CV_CAP_PROP_FRAME_WIDTH));
             mVideoHeight = std::size_t(mVideoReader->get(CV_CAP_PROP_FRAME_HEIGHT));
@@ -37,7 +41,7 @@ namespace op
 
         ~WJsonOutput()
         {
-            postProcess();
+            postProcess(mMaxFramesPerSegment);
         }
 
         void initializationOnThread()
@@ -184,6 +188,7 @@ namespace op
         std::shared_ptr<op::VideoReader> mVideoReader;
         std::string mJsonPath;
         PoseModel mPoseModel;
+        std::size_t mMaxFramesPerSegment;
 
         DELETE_COPY(WJsonOutput);
 
@@ -268,11 +273,12 @@ namespace op
         //void postProcess(float confidenceThreshold = 0.1f, float mseLerpTheshold = 4.f,
         //    double mseHeadTranslationThreshold = 0.35, double mseHeadRotationThreshold = 0.03,
         //    int indexerInterval = 200);
-        void postProcess(float confidenceThreshold = 0.1f,
+        void postProcess(
+            std::size_t maxFramesPerSegment = 0,
+            float confidenceThreshold = 0.1f,
             float mseLerpTheshold = 48.f,
             double mseHeadTranslationThreshold = 0.6,
             double mseHeadRotationThreshold = 0.06,
-            std::size_t maxFramesPerSegment = 0,
             bool personByPerson = true,
             bool frameByFrame = true,
             bool outputMetafile = true)

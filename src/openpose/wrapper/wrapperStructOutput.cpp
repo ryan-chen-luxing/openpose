@@ -5,7 +5,8 @@ namespace op
 {
     WrapperStructOutput::WrapperStructOutput(const DisplayMode displayMode_, const bool guiVerbose_,
                                              const bool fullScreen_, const std::string& writeKeypoint_,
-                                             const DataFormat writeKeypointFormat_, const std::shared_ptr<VideoReader> videoReader_, const std::string& writeJson_,
+                                             const DataFormat writeKeypointFormat_, const std::shared_ptr<VideoReader> videoReader_,
+                                             const std::string& writeJson_, std::size_t maxFramesPerSegment_,
                                              const std::string& writeCocoJson_, const std::string& writeCocoFootJson_,
                                              const std::string& writeImages_, const std::string& writeImagesFormat_,
                                              const std::string& writeVideo_, const double writeVideoFps_,
@@ -20,6 +21,7 @@ namespace op
         writeKeypointFormat{writeKeypointFormat_},
         videoReader{videoReader_},
         writeJson{writeJson_},
+        maxFramesPerSegment{maxFramesPerSegment_},
         writeCocoJson{writeCocoJson_},
         writeCocoFootJson{writeCocoFootJson_},
         writeImages{writeImages_},
