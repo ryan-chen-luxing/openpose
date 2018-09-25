@@ -108,9 +108,9 @@ namespace op
 
                 for (auto iTrack = jTracks.begin(); iTrack != jTracks.end(); ++iTrack)
                 {
-                    if (iTrack.key() == "hr")
+                    if (iTrack.key() == "head")
                     {
-                        for (auto track : iTrack.value())
+                        for (auto track : iTrack.value()["r"])
                         {
                             faceRotationTracks.push_back(std::vector<std::shared_ptr<Keyframe3D>>{});
 
@@ -119,10 +119,8 @@ namespace op
                                 faceRotationTracks.back().push_back(std::make_shared<Keyframe3D>(keyframe));
                             }
                         }
-                    }
-                    else if(iTrack.key() == "ht")
-                    {
-                        for (auto track : iTrack.value())
+
+                        for (auto track : iTrack.value()["t"])
                         {
                             faceTranslationTracks.push_back(std::vector<std::shared_ptr<Keyframe3D>>{});
 

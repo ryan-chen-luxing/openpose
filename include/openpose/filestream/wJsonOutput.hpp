@@ -1053,7 +1053,7 @@ namespace op
                         //jPerson["faceTranslation"] = jFaceTranslationTracks;
                         if (!jFaceTranslationTracks.empty())
                         {
-                            jPerson["tracks"]["ht"] = jFaceTranslationTracks;
+                            jPerson["tracks"]["head"]["t"] = jFaceTranslationTracks;
                         }
 
                         nlohmann::json jFaceRotationTracks;
@@ -1081,7 +1081,7 @@ namespace op
                         //jPerson["faceRotation"] = jFaceRotationTracks;
                         if (!jFaceRotationTracks.empty())
                         {
-                            jPerson["tracks"]["hr"] = jFaceRotationTracks;
+                            jPerson["tracks"]["head"]["r"] = jFaceRotationTracks;
                         }
 
                         jPersons.push_back(jPerson);
