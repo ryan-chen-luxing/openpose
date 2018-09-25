@@ -8,35 +8,13 @@
 #include <tuple>
 #include <nlohmann/json.hpp>
 #include <algorithm>
-#include <sstream>
 
 using namespace nlohmann;
 
 namespace op
 {
-    PoseTrackingInfo::PoseTrackingInfo(const std::string& fileid)
-    {
-        int numSegments = 1;
-        for (int s = 0; s < numSegments; ++s)
-        {
-            std::stringstream ss;
-            ss << fileid << "_pbp_" << s << ".json";
-
-            std::ifstream i(ss.str());
-            json j;
-            i >> j;
-
-            numSegments = j["numSegments"];
-
-            for (auto person : j["persons"])
-            {
-                persons.push_back(std::make_shared<Person>(person));
-            }
-        }
-    }
-
     PoseTrackingInfoVisualizer::PoseTrackingInfoVisualizer(const PoseModel poseModel,
-        const std::string& poseTrackingInfo,
+        const std::string& poseTrackingInfoFolder,
         const float renderThreshold, const bool blendOriginalFrame,
         const float alphaKeypoint,
         const float alphaHeatMap,
@@ -46,9 +24,9 @@ namespace op
         getNumberElementsToRender(poseModel)}
         , PoseRenderer{ poseModel }
     {
-        if (!poseTrackingInfo.empty())
+        if (!poseTrackingInfoFolder.empty())
         {
-            mPoseTrackingInfo = std::make_shared<PoseTrackingInfo>(poseTrackingInfo);
+            mPoseTrackingInfo = std::make_shared<PoseTrackingInfo>(poseTrackingInfoFolder);
         }
     }
 

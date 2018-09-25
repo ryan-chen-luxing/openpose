@@ -7,6 +7,8 @@
 #include <openpose/pose/poseParametersRender.hpp>
 #include <openpose/pose/poseRenderer.hpp>
 #include <nlohmann/json.hpp>
+#include <sstream>
+#include <fstream>
 
 using namespace nlohmann;
 
@@ -139,7 +141,26 @@ namespace op
         };
 
         std::vector<std::shared_ptr<Person>> persons;
-        explicit PoseTrackingInfo(const std::string& fileid);
+        explicit PoseTrackingInfo(const std::string& poseTrackingInfoFolder)
+        {
+            int numSegments = 1;
+            for (int s = 0; s < numSegments; ++s)
+            {
+                std::stringstream ss;
+                ss << poseTrackingInfoFolder << "pbp_" << s << ".json";
+
+                std::ifstream i(ss.str());
+                json j;
+                i >> j;
+
+                numSegments = j["numSegments"];
+
+                for (auto person : j["persons"])
+                {
+                    persons.push_back(std::make_shared<Person>(person));
+                }
+            }
+        }
     };
 
     class OP_API PoseCpuRenderer : public Renderer, public PoseRenderer
@@ -162,7 +183,7 @@ namespace op
     class OP_API PoseTrackingInfoVisualizer : public Renderer, public PoseRenderer
     {
     public:
-        PoseTrackingInfoVisualizer(const PoseModel poseModel, const std::string& poseTrackingInfo = "",
+        PoseTrackingInfoVisualizer(const PoseModel poseModel, const std::string& poseTrackingInfoFolder = "",
             const float renderThreshold = 0.f, const bool blendOriginalFrame = true,
             const float alphaKeypoint = POSE_DEFAULT_ALPHA_KEYPOINT,
             const float alphaHeatMap = POSE_DEFAULT_ALPHA_HEAT_MAP,

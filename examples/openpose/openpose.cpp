@@ -241,9 +241,9 @@ DEFINE_string(write_bvh,                "",             "Experimental, not avail
 DEFINE_string(udp_host,                 "",             "Experimental, not available yet. IP for UDP communication. E.g., `192.168.0.1`.");
 DEFINE_string(udp_port,                 "8051",         "Experimental, not available yet. Port number for UDP communication.");
 
-DEFINE_string(youtubeId, "", "video id for youtube");
+DEFINE_string(write_custom_json, "", "Directory to write OpenPose output in the JSON format.");
 DEFINE_bool(visualizeKeyframes, false, "false to generate keyframes, true to visualize keyframes.");
-DEFINE_bool(inputObjectDetection, false, "");
+DEFINE_string(inputObjectDetection, "", "");
 DEFINE_int32(maxFramesPerSegment, 0, "used to split the json file if the frame number is greater than this value");
 
 int openPoseDemo()
@@ -274,19 +274,27 @@ int openPoseDemo()
         const auto faceNetInputSize = op::flagsToPoint(FLAGS_face_net_resolution, "368x368 (multiples of 16)");
         // handNetInputSize
         const auto handNetInputSize = op::flagsToPoint(FLAGS_hand_net_resolution, "368x368 (multiples of 16)");
-        
-        std::string youtubeId = FLAGS_youtubeId;
-        //youtubeId = "b9OlwQEnncs";
+
         bool visualizeKeyframes = FLAGS_visualizeKeyframes;
-        auto useCamera = youtubeId.empty() && FLAGS_video.empty();
+        auto useCamera = FLAGS_video.empty();
         auto visualizeCompressedPoseTracking = !useCamera && visualizeKeyframes;
-        auto inputObjectDetection = !visualizeCompressedPoseTracking && FLAGS_inputObjectDetection;
-        auto outputPoseTracking = !visualizeCompressedPoseTracking;
+        auto inputObjectDetection = visualizeCompressedPoseTracking ? "" : FLAGS_inputObjectDetection;
+
+        std::string outputPoseTrackingFolder = "";
+        if (!FLAGS_video.empty())
+        {
+            std::string youtubeId = op::getFileNameNoExtension(FLAGS_video);
+            outputPoseTrackingFolder = FLAGS_write_custom_json + "\\" + youtubeId;
+            outputPoseTrackingFolder = op::formatAsDirectory(outputPoseTrackingFolder);
+        }
+        std::cout << "outputPoseTrackingFolder: " << outputPoseTrackingFolder << std::endl;
+
         // producerType
         std::shared_ptr<op::Producer> producerSharedPtr;
         if (useCamera)
         {
-            producerSharedPtr = op::flagsToProducer(FLAGS_image_dir, FLAGS_video, FLAGS_ip_camera, FLAGS_camera,
+            producerSharedPtr = op::flagsToProducer(FLAGS_image_dir,
+                FLAGS_video, FLAGS_ip_camera, FLAGS_camera,
                 FLAGS_flir_camera, FLAGS_camera_resolution, FLAGS_camera_fps,
                 FLAGS_camera_parameter_folder, !FLAGS_frame_keep_distortion,
                 (unsigned int)FLAGS_3d_views, FLAGS_flir_camera_index);
@@ -294,12 +302,11 @@ int openPoseDemo()
         else
         {
             producerSharedPtr = op::flagsToProducer(FLAGS_image_dir,
-                FLAGS_video.empty() ? youtubeId + ".mp4" : FLAGS_video,
-                FLAGS_ip_camera, FLAGS_camera,
+                FLAGS_video, FLAGS_ip_camera, FLAGS_camera,
                 FLAGS_flir_camera, FLAGS_camera_resolution, FLAGS_camera_fps,
                 FLAGS_camera_parameter_folder, !FLAGS_frame_keep_distortion,
                 (unsigned int)FLAGS_3d_views, FLAGS_flir_camera_index,
-                inputObjectDetection ? youtubeId + "_objectDetection.json" : "");
+                inputObjectDetection);
         }
 
         // poseModel
@@ -332,7 +339,7 @@ int openPoseDemo()
             poseModel, !FLAGS_disable_blending, (float)FLAGS_alpha_pose, (float)FLAGS_alpha_heatmap,
             FLAGS_part_to_show, FLAGS_model_folder, heatMapTypes, heatMapScale, FLAGS_part_candidates,
             (float)FLAGS_render_threshold, FLAGS_number_people_max, enableGoogleLogging,
-            visualizeCompressedPoseTracking ? youtubeId : ""};
+            visualizeCompressedPoseTracking ? outputPoseTrackingFolder : ""};
         // Face configuration (use op::WrapperStructFace{} to disable it) 
         const op::WrapperStructFace wrapperStructFace{
             FLAGS_face, faceNetInputSize, op::flagsToRenderMode(FLAGS_face_render, multipleView, FLAGS_render_pose),
@@ -358,7 +365,8 @@ int openPoseDemo()
             wrapperStructOutput = std::make_shared<op::WrapperStructOutput>(
                 op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
                 FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), nullptr,
-                FLAGS_write_json, FLAGS_maxFramesPerSegment,
+                FLAGS_write_json,
+                FLAGS_write_custom_json, FLAGS_maxFramesPerSegment,
                 FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
                 FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
                 FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port);
@@ -369,7 +377,8 @@ int openPoseDemo()
             wrapperStructOutput = std::make_shared<op::WrapperStructOutput>(
                 op::flagsToDisplayMode(FLAGS_display, FLAGS_3d), !FLAGS_no_gui_verbose, FLAGS_fullscreen,
                 FLAGS_write_keypoint, op::stringToDataFormat(FLAGS_write_keypoint_format), videoReader,
-                outputPoseTracking ? youtubeId : "", FLAGS_maxFramesPerSegment,
+                FLAGS_write_json,
+                outputPoseTrackingFolder, FLAGS_maxFramesPerSegment,
                 FLAGS_write_coco_json, FLAGS_write_coco_foot_json, FLAGS_write_images, FLAGS_write_images_format,
                 FLAGS_write_video, FLAGS_camera_fps, FLAGS_write_heatmaps, FLAGS_write_heatmaps_format,
                 FLAGS_write_video_adam, FLAGS_write_bvh, FLAGS_udp_host, FLAGS_udp_port);

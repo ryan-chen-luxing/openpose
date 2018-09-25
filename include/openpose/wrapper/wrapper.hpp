@@ -506,6 +506,7 @@ namespace op
             const auto writeImagesCleaned = formatAsDirectory(wrapperStructOutput.writeImages);
             const auto writeKeypointCleaned = formatAsDirectory(wrapperStructOutput.writeKeypoint);
             const auto writeJsonCleaned = formatAsDirectory(wrapperStructOutput.writeJson);
+            const auto writeCustomJsonCleaned = formatAsDirectory(wrapperStructOutput.writeCustomJson);
             const auto writeHeatMapsCleaned = formatAsDirectory(wrapperStructOutput.writeHeatMaps);
             const auto modelFolder = formatAsDirectory(wrapperStructPose.modelFolder);
 
@@ -927,12 +928,14 @@ namespace op
             // enabled, etc.)
             if (!writeJsonCleaned.empty())
             {
-                //const auto peopleJsonSaver = std::make_shared<PeopleJsonSaver>(writeJsonCleaned);
-                //mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
-
+                const auto peopleJsonSaver = std::make_shared<PeopleJsonSaver>(writeJsonCleaned);
+                mOutputWs.emplace_back(std::make_shared<WPeopleJsonSaver<TDatumsSP>>(peopleJsonSaver));
+            }
+            if (!writeCustomJsonCleaned.empty())
+            {
                 mOutputWs.emplace_back(std::make_shared<WJsonOutput<TDatumsSP>>(
                     wrapperStructPose.poseModel, wrapperStructOutput.videoReader,
-                    wrapperStructOutput.writeJson, wrapperStructOutput.maxFramesPerSegment));
+                    writeCustomJsonCleaned, wrapperStructOutput.maxFramesPerSegment));
             }
             // Write people pose data on disk (COCO validation json format)
             if (!wrapperStructOutput.writeCocoJson.empty())

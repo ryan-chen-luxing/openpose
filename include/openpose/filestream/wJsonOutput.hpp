@@ -7,6 +7,7 @@
 #include <openpose/pose/enumClasses.hpp>
 #include <openpose/utilities/fastMath.hpp>
 #include <openpose/utilities/keypoint.hpp>
+#include <openpose/utilities/fileSystem.hpp>
 #include <openpose/pose/poseParameters.hpp>
 #include <opencv2/opencv.hpp>
 #include <map>
@@ -1106,12 +1107,16 @@ namespace op
                     jRoot["numSegments"] = jRoots.size();
                     jRoot["segmentIndex"] = i;
                     std::stringstream ss;
-                    ss << this->mJsonPath << "_pbp_" << i;
-                    std::ofstream ofile(ss.str() + ".json");
+                    ss << this->mJsonPath << "pbp_" << i << ".json";
+                    auto jsonFilename = ss.str();
+                    std::ofstream ofile(jsonFilename);
                     ofile << jRoot;
                     ofile.close();
 #ifdef _WIN32
-                    std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
+                    auto zipFilename = getFullFilePathNoExtension(jsonFilename) + ".7z";
+                    std::string command = "7z.exe a " + zipFilename + " " + jsonFilename;
+                    std::cout << "7z command: " << command << std::endl;
+
                     system(command.c_str());
 #endif
                 }
@@ -1353,12 +1358,16 @@ namespace op
                     jRoot["numSegments"] = jRoots.size();
                     jRoot["segmentIndex"] = i;
                     std::stringstream ss;
-                    ss << this->mJsonPath << "_fbf_" << i;
-                    std::ofstream ofile(ss.str() + ".json");
+                    ss << this->mJsonPath << "fbf_" << i << ".json";
+                    auto jsonFilename = ss.str();
+                    std::ofstream ofile(jsonFilename);
                     ofile << jRoot;
                     ofile.close();
 #ifdef _WIN32
-                    std::string command = "7z.exe a " + ss.str() + ".7z " + ss.str() + ".json";
+                    auto zipFilename = getFullFilePathNoExtension(jsonFilename) + ".7z";
+                    std::string command = "7z.exe a " + zipFilename + " " + jsonFilename;
+                    std::cout << "7z command: " << command << std::endl;
+
                     system(command.c_str());
 #endif
                 }
@@ -1386,7 +1395,7 @@ namespace op
                     jMeta["hierarchy"][toString(v.front())] = temp;
                 }
 
-                std::ofstream ofile(this->mJsonPath + "_meta.json");
+                std::ofstream ofile(this->mJsonPath + "meta.json");
                 ofile << jMeta;
                 ofile.close();
             }

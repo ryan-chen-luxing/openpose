@@ -63,6 +63,12 @@ namespace op
          */
         std::string writeJson;
 
+		/**
+		 * Directory to write OpenPose output in the new JSON format.
+		 * If it is empty (default), it is disabled.
+		 */
+		std::string writeCustomJson;
+
         /**
         * The json file will be split if the number of frames is greater than this value
         */
@@ -151,7 +157,9 @@ namespace op
                             const bool fullScreen = false, const std::string& writeKeypoint = "",
                             const DataFormat writeKeypointFormat = DataFormat::Xml,
                             const std::shared_ptr<op::VideoReader> videoReader = nullptr,
-                            const std::string& writeJson = "", std::size_t maxFramesPerSegment = 0,
+                            const std::string& writeJson = "",
+							const std::string& writeCustomJson = "",
+							const std::size_t maxFramesPerSegment = 0,
                             const std::string& writeCocoJson = "",
                             const std::string& writeCocoFootJson = "", const std::string& writeImages = "",
                             const std::string& writeImagesFormat = "", const std::string& writeVideo = "",
