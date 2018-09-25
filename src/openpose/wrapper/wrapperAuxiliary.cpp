@@ -58,7 +58,8 @@ namespace op
                 };
                 const auto savingSomething = (
                     !wrapperStructOutput.writeImages.empty() || !wrapperStructOutput.writeVideo.empty()
-                        || !wrapperStructOutput.writeKeypoint.empty() || !wrapperStructOutput.writeJson.empty()
+                        || !wrapperStructOutput.writeKeypoint.empty()
+                        || !wrapperStructOutput.writeJson.empty() || !wrapperStructOutput.writeCustomJson.empty()
                         || !wrapperStructOutput.writeCocoJson.empty() || !wrapperStructOutput.writeHeatMaps.empty()
                         || !wrapperStructOutput.writeCocoFootJson.empty()
                 );

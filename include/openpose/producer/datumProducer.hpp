@@ -7,6 +7,7 @@
 #include <openpose/core/common.hpp>
 #include <openpose/core/datum.hpp>
 #include <openpose/producer/producer.hpp>
+#include <sstream>
 
 namespace op
 {
@@ -102,8 +103,14 @@ namespace op
                     // It must be always reset or bug in fake pause
                     spVideoSeek->second = 0;
                 }
+
                 auto nextFrameName = spProducer->getNextFrameName();
                 const auto nextFrameNumber = (unsigned long long)spProducer->get(CV_CAP_PROP_POS_FRAMES);
+                const auto totalFrameNumber = (unsigned long long)spProducer->get(CV_CAP_PROP_FRAME_COUNT);
+                std::stringstream ss;
+                ss << "Processing frame: " << nextFrameNumber << " / " << totalFrameNumber;
+                log(ss.str(), Priority::Low);
+                
                 const auto cvMats = spProducer->getFrames();
                 const auto cameraMatrices = spProducer->getCameraMatrices();
                 auto cameraExtrinsics = spProducer->getCameraExtrinsics();

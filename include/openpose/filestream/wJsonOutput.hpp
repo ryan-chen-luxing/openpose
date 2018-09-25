@@ -1115,7 +1115,10 @@ namespace op
 #ifdef _WIN32
                     auto zipFilename = getFullFilePathNoExtension(jsonFilename) + ".7z";
                     std::string command = "7z.exe a " + zipFilename + " " + jsonFilename;
-                    std::cout << "7z command: " << command << std::endl;
+
+                    ss.clear();
+                    ss << "7z command: " << command;
+                    op::log(ss.str(), op::Priority::Normal);
 
                     system(command.c_str());
 #endif
@@ -1329,10 +1332,10 @@ namespace op
                             switch (poseType)
                             {
                             case 0:
-                                keypointName = "ht";
+                                keypointName = "t";
                                 break;
                             case 1:
-                                keypointName = "hr";
+                                keypointName = "r";
                                 break;
                             default:
                                 break;
@@ -1342,7 +1345,7 @@ namespace op
                             //jPose["keyframes"] = jKeyframes;
                             //jFrame.push_back(jPose);
 
-                            jFrame[keypointName] = jKeyframes;
+                            jFrame["head"][keypointName] = jKeyframes;
                         }
                     }
 
@@ -1366,7 +1369,10 @@ namespace op
 #ifdef _WIN32
                     auto zipFilename = getFullFilePathNoExtension(jsonFilename) + ".7z";
                     std::string command = "7z.exe a " + zipFilename + " " + jsonFilename;
-                    std::cout << "7z command: " << command << std::endl;
+
+                    ss.clear();
+                    ss << "7z command: " << command;
+                    op::log(ss.str(), op::Priority::Normal);
 
                     system(command.c_str());
 #endif

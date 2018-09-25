@@ -287,7 +287,9 @@ int openPoseDemo()
             outputPoseTrackingFolder = FLAGS_write_custom_json;
             outputPoseTrackingFolder = op::formatAsDirectory(outputPoseTrackingFolder);
         }
-        std::cout << "outputPoseTrackingFolder: " << outputPoseTrackingFolder << std::endl;
+        std::stringstream ss;
+        ss << "outputPoseTrackingFolder: " << outputPoseTrackingFolder;
+        op::log(ss.str(), op::Priority::Normal);
 
         // producerType
         std::shared_ptr<op::Producer> producerSharedPtr;
