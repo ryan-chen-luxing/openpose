@@ -284,7 +284,7 @@ int openPoseDemo()
         if (!FLAGS_video.empty())
         {
             std::string youtubeId = op::getFileNameNoExtension(FLAGS_video);
-            outputPoseTrackingFolder = FLAGS_write_custom_json + "\\" + youtubeId;
+            outputPoseTrackingFolder = FLAGS_write_custom_json;
             outputPoseTrackingFolder = op::formatAsDirectory(outputPoseTrackingFolder);
         }
         std::cout << "outputPoseTrackingFolder: " << outputPoseTrackingFolder << std::endl;
