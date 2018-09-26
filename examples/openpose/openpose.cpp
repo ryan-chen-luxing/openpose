@@ -280,12 +280,15 @@ int openPoseDemo()
         auto visualizeCompressedPoseTracking = !useCamera && visualizeKeyframes;
         auto inputObjectDetection = visualizeCompressedPoseTracking ? "" : FLAGS_inputObjectDetection;
 
-        std::string outputPoseTrackingFolder = "";
         if (!FLAGS_video.empty())
         {
             std::string youtubeId = op::getFileNameNoExtension(FLAGS_video);
-            outputPoseTrackingFolder = FLAGS_write_custom_json;
-            outputPoseTrackingFolder = op::formatAsDirectory(outputPoseTrackingFolder);
+        }
+
+        std::string outputPoseTrackingFolder = op::formatAsDirectory(FLAGS_write_custom_json);
+        if (!op::existDirectory(outputPoseTrackingFolder))
+        {
+            op::makeDirectory(outputPoseTrackingFolder);
         }
         std::stringstream ss;
         ss << "outputPoseTrackingFolder: " << outputPoseTrackingFolder;

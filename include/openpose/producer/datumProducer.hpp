@@ -109,7 +109,7 @@ namespace op
                 const auto totalFrameNumber = (unsigned long long)spProducer->get(CV_CAP_PROP_FRAME_COUNT);
                 std::stringstream ss;
                 ss << "Processing frame: " << nextFrameNumber << " / " << totalFrameNumber;
-                log(ss.str(), Priority::Low);
+                log(ss.str(), Priority::Normal);
                 
                 const auto cvMats = spProducer->getFrames();
                 const auto cameraMatrices = spProducer->getCameraMatrices();
